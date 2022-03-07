@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Editor</title>
+    <script src="../dist/index.min.js"></script>
+    <style>
+        #editor {
+            padding: 10px 25px;
+            border: 1px solid red;
+            border-radius: 5px;
+            line-height: 1.5rem;
+            min-height: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div id="editor"></div>
+    <script>
+        const container = document.getElementById('editor')
+        const editor = new window['core-editor'].Editor({
+            attach: container
+        })
+
+        console.log(editor)
+    </script>
+</body>
+</html>
