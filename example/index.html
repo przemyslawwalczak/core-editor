@@ -5,23 +5,56 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Core Editor</title>
-    <script src="../dist/index.min.js"></script>
+    <script src="/library.min.js"></script>
     <style>
+        body, html {
+            margin: 0;
+            font-size: 16px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
         #editor {
-            padding: 10px 25px;
+            padding: 0.5rem 1rem;
             border: 1px solid red;
             border-radius: 5px;
             line-height: 1.5rem;
             min-height: 1em;
+            margin: 1rem;
+        }
+
+        p {
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div id="editor"></div>
     <script>
+        console.log(this)
+
+        class Mentions extends window['core-editor'].Extension {
+            constructor(editor) {
+                super('mention', editor)
+
+
+            }
+        }
+
         const container = document.getElementById('editor')
         const editor = new window['core-editor'].Editor({
-            attach: container
+            attach: container,
+            extensions: (editor) => [
+                new Mentions(editor)
+            ],
+            value: [
+                "Hello World",
+                { type: 'mention', data: { name: 'sftester' } },
+                [
+                    "Hello",
+                    { type: 'mention', data: { name: 'sftester' } },
+                    "World"
+                ]
+            ]
         })
 
         console.log(editor)

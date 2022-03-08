@@ -1,9 +1,24 @@
-import { Editor } from './index'
+import { Editor, EVENT_TYPE } from './index'
 import { addEventListener, isChildrenOf } from './utils'
 
-export interface CurrentSelection {
+type DocumentSelection = globalThis.Selection
+
+export class CurrentSelection {
+    private _selection: DocumentSelection
     anchor: Node | null
     focus: Node | null
+
+    constructor(selection: DocumentSelection) {
+        this._selection = selection
+
+        this.anchor = selection.anchorNode || null
+        this.focus = selection.anchorNode || null
+    }
+
+    setRange(range: Range) {
+        this._selection.removeAllRanges()
+        this._selection.addRange(range)
+    }
 }
 
 export class Selection<T> {
@@ -36,13 +51,82 @@ export class Selection<T> {
 
         // TODO: Return normalized selection
 
-        return {
-            anchor: selection.anchorNode || null,
-            focus: selection.focusNode || null
-        }
+        return new CurrentSelection(selection)
     }
 
-    isCurrentlySelected(selection: CurrentSelection | null = this.getSelection()) {
+    findSelectedLine(selection = this.getSelection()) {
+        if (!this.isCurrentlySelected(selection)) {
+            return null
+        }
+
+        const { anchor } = selection
+
+        if (anchor == null) {
+            return null
+        }
+
+        let result = anchor
+
+        while (result && result.parentElement !== this.editor.container) {
+            if (result.parentElement == null) {
+                return null
+            }
+
+            result = result.parentElement
+        }
+
+        return result
+    }
+
+    getChildrenIndex(target: Element) {
+        for (let index=0; index<this.editor.container.children.length; index++) {
+            const children = this.editor.container.children[index]
+            if (children === target) {
+                return index
+            }
+        }
+
+        console.log('children not found')
+
+        return -1
+    }
+
+    toNextLine() {
+        const selection = this.getSelection()
+        
+        if (selection == null) {
+            return false
+        }
+
+        const currentLine = this.findSelectedLine(selection)
+
+        if (currentLine == null) {
+            return false
+        }
+
+        const currentLineIndex = this.getChildrenIndex(currentLine as Element)
+
+        if (currentLineIndex === -1) {
+            return false
+        }
+
+        const nextLine = this.editor.container.children[currentLineIndex + 1]
+
+        if (nextLine == null) {
+            return false
+        }
+
+        const range = document.createRange()
+
+        range.setStart(nextLine, 0)
+        range.setEnd(nextLine, 0)
+
+        selection.setRange(range)
+
+        return true
+    }
+
+    isCurrentlySelected(selection: CurrentSelection | null = this.getSelection()): selection is CurrentSelection {
         if (selection == null) {
             return false
         }
@@ -55,7 +139,11 @@ export class Selection<T> {
             return
         }
 
-
+        console.log('selection change:', event)
+        
+        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_SELECTION_CHANGE, event)
+        this.editor.callExtensionEvent(EVENT_TYPE.ON_SELECTION_CHANGE, event)
+        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_SELECTION_CHANGE, event)
     }
 
     detach() {

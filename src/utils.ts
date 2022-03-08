@@ -1,4 +1,4 @@
-export type Listener = (event: Event | KeyboardEvent) => void
+export type Listener = (event: Event | KeyboardEvent | CompositionEvent) => void
 
 export function addEventListener(target: Element | Document | Window, event: string, listener: Listener) {
     target.addEventListener(event, listener as any)
