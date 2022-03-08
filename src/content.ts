@@ -66,8 +66,6 @@ export class Content<T> {
     }
 
     onCompositionEnd(event: CompositionEvent) {
-        console.log('composition end:', event)
-
         if (event.data.lastIndexOf("\n") === event.data.length - 1) {
 			this.editor.selection.toNextLine();
 		}
@@ -91,7 +89,7 @@ export class Content<T> {
 
     onCopy(event: Event) {
         event.preventDefault()
-        
+
         this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_COPY, event)
         this.editor.callExtensionEvent(EVENT_TYPE.ON_COPY, event)
         this.editor.callExtensionEvent(EVENT_TYPE.AFTER_COPY, event)
