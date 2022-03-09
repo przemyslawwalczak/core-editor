@@ -93,7 +93,7 @@ export class Selection<T> {
 
     toNextLine() {
         const selection = this.getSelection()
-        
+
         if (selection == null) {
             return false
         }
@@ -139,8 +139,6 @@ export class Selection<T> {
             return
         }
 
-        console.log('selection change:', event)
-        
         this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_SELECTION_CHANGE, event)
         this.editor.callExtensionEvent(EVENT_TYPE.ON_SELECTION_CHANGE, event)
         this.editor.callExtensionEvent(EVENT_TYPE.AFTER_SELECTION_CHANGE, event)

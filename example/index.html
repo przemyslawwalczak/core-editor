@@ -25,18 +25,37 @@
         p {
             margin: 0;
         }
+
+        .mention {
+            color: blue;
+            background: rgba(255, 0, 0, 0.15);
+            padding: 0.25rem 0.35rem;
+        }
     </style>
 </head>
 <body>
     <div id="editor"></div>
     <script>
-        console.log(this)
-
         class Mentions extends window['core-editor'].Extension {
             constructor(editor) {
                 super('mention', editor)
+            }
 
+            createEntity(dom, data) {
+                console.log('creating entity:', data)
 
+                return dom.create({
+                    element: 'span',
+                    attribute: {
+                        class: 'mention',
+                        contenteditable: false
+                    },
+                    children: [
+                        { text: "{guard:left}" },
+                        { text: `@${data.name}`},
+                        { text: "{guard:right}" },
+                    ]
+                })
             }
         }
 
@@ -50,9 +69,9 @@
                 "Hello World",
                 { type: 'mention', data: { name: 'sftester' } },
                 [
-                    "Hello",
+                    "Hello ",
                     { type: 'mention', data: { name: 'sftester' } },
-                    "World"
+                    " World"
                 ]
             ]
         })

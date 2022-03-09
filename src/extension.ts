@@ -1,5 +1,6 @@
 import { Editor } from './index'
 import { EVENT_TYPE } from './constants/event'
+import { DocumentObjectModel } from './dom'
 
 export class Extension<T> {
     type: string
@@ -10,7 +11,7 @@ export class Extension<T> {
         this.editor = editor
     }
 
-    createEntity?(): void
+    createEntity?(dom: DocumentObjectModel<T>, data?: any): Element
 
     serialize?(): void
     deserialize?(): void
@@ -18,7 +19,7 @@ export class Extension<T> {
     [EVENT_TYPE.BEFORE_SELECTION_CHANGE]?(event: Event): boolean | void
     [EVENT_TYPE.ON_SELECTION_CHANGE]?(event: Event): boolean | void
     [EVENT_TYPE.AFTER_SELECTION_CHANGE]?(event: Event): boolean | void
-    
+
     [EVENT_TYPE.BEFORE_KEY_DOWN]?(event: KeyboardEvent): boolean | void
     [EVENT_TYPE.ON_KEY_DOWN]?(event: KeyboardEvent): boolean | void
     [EVENT_TYPE.AFTER_KEY_DOWN]?(event: KeyboardEvent): boolean | void

@@ -1,22 +1,17 @@
 import { Editor, EVENT_TYPE } from './index'
 import { addEventListener } from './utils'
 import { isRemoving } from './keyboard'
-
-export interface Entity {
-    type: string
-    data?: any
-}
-
-export type Serialized = string | Entity | Serialized[]
-
-const EMPTY = '<p><br></p>'
+import { DocumentObjectModel, Serialized } from './dom'
 
 export class Content<T> {
     editor: Editor<T>
+    dom: DocumentObjectModel<T>
+
     observer: MutationObserver
 
     constructor(editor: Editor<T>, value: Serialized[] = []) {
         this.editor = editor
+        this.dom = new DocumentObjectModel(editor)
 
         this.deserialize(value)
 
@@ -46,7 +41,7 @@ export class Content<T> {
     onKeyUp(event: KeyboardEvent) {
         this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_KEY_UP, event)
 
-        if (this.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
+        if (this.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
             event.preventDefault()
         }
 
@@ -57,7 +52,7 @@ export class Content<T> {
     onKeyDown(event: KeyboardEvent) {
         this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_KEY_DOWN, event)
 
-        if (this.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
+        if (this.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
             event.preventDefault()
         }
 
@@ -94,18 +89,12 @@ export class Content<T> {
         this.editor.callExtensionEvent(EVENT_TYPE.ON_COPY, event)
         this.editor.callExtensionEvent(EVENT_TYPE.AFTER_COPY, event)
     }
-    
+
     deserialize(value: Serialized[]) {
         const { container } = this.editor
 
         container.setAttribute('contenteditable', 'false')
-
-        // TODO: Deserialize the value into html.
-
-        if (value.length === 0) {
-            container.innerHTML = EMPTY
-        }
-
+        this.dom.format(value)
         container.setAttribute('contenteditable', 'true')
     }
 
@@ -113,14 +102,6 @@ export class Content<T> {
         // TODO: Serialize the content from HTML to Serialized array.
 
         return []
-    }
-
-    isEmpty() {
-        return this.editor.container.innerHTML === EMPTY
-    }
-
-    clear() {
-        this.editor.container.innerHTML = EMPTY
     }
 
     detach() {

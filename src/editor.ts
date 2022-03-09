@@ -1,7 +1,8 @@
 import { Selection } from './selection'
-import { Content, Serialized } from './content'
+import { Content } from './content'
 import { Extension } from './extension'
 import { EVENT_TYPE } from './constants/event'
+import { Serialized } from './dom'
 
 export interface EditorOptions<T> {
     attach: Element | null
@@ -26,11 +27,10 @@ export class Editor<T> {
 
         this.container = option.attach
         this.context = option.context
+        this.extension = option.extensions ? option.extensions(this) : []
 
         this.content = new Content(this, option.value)
         this.selection = new Selection(this)
-
-        this.extension = option.extensions ? option.extensions(this) : []
     }
 
     findExtensionByType(type: string) {
@@ -66,9 +66,3 @@ export class Editor<T> {
         this.content.detach()
     }
 }
-
-// Debugging
-
-// const editor = new Editor({
-//     attach: document.getElementById('editor')
-// })
