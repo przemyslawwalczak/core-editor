@@ -13,12 +13,12 @@ export function isEntity(value: Entity): value is Entity {
 
 export const EMPTY = '<p><br></p>'
 
-export interface Build {
-    element: string | Build | Element
+export interface ElementDescriptor {
+    element?: string | ElementDescriptor | Element
     text?: string
     attribute?: { [key: string]: boolean | number | string }
     listener?: { [key: string]: () => void }
-    children?: Build[] | Build | (Element | Text | null)[]
+    children?: ElementDescriptor[] | (Element | Text | null)[] | ElementDescriptor
 }
 
 export class DocumentObjectModel<T> {
@@ -30,142 +30,180 @@ export class DocumentObjectModel<T> {
         this.root = editor.container
     }
 
-    createElement(element: string | Build | Element) {
-        if (typeof element === 'string') {
-            return document.createElement(element)
-        }
+    create({ element, attribute, text, listener, children }: ElementDescriptor) {
 
-        if (element instanceof Element) {
-            return element
-        }
-
-        return this.create(element) as Element
     }
 
-    createEntity(constructor: Entity) {
-        const extension = this.editor.findExtensionByType(constructor.type)
+    createEntity({ type, data }: Entity) {
+        const extension = this.editor.findExtensionByType(type)
 
         if (extension == null) {
             return this.create({
                 element: 'span',
-                text: `undefined:extension:${constructor.type}`
+                text: `undefined:extension:${type}`
             })
         }
 
         if (extension.createEntity == null) {
             return this.create({
                 element: 'span',
-                text: `undefined:extension.createEntity:${constructor.type}`
+                text: `undefined:extension.createEntity:${type}`
             })
         }
 
-        return extension.createEntity(this, constructor.data)
+        return extension.createEntity(this, data)
     }
 
-    create(constructor: Build): Element {
-        const { element, text, attribute, listener } = constructor
-
-        if (!element && text) {
-            return document.createTextNode(text) as any
-        }
-
-        const parent = this.createElement(element)
-        
-        if (attribute) {
-            for (const key in attribute) {
-                parent.setAttribute(key, String(attribute[key]))
-            }
-        }
-
-        if (listener) {
-            for (const key in listener) {
-                parent.addEventListener(key, listener[key])
-            }
-        }
-
-        if (typeof text === 'string') {
-            parent.append(document.createTextNode(text))
-            return parent
-        }
-
-        if (constructor.children == null || Array.isArray(constructor.children)) {
-            for (const node of constructor.children || []) {
-                if (node == null) {
-                    continue
-                }
-
-                if (node instanceof Element || node instanceof Text) {
-                    parent.append(node)
-                    continue
-                }
-
-                parent.append(this.create(node))
-            }
-
-            return parent
-        }
-
-        parent.append(this.create(constructor.children))
-
-        return parent
+    format(serialized: Serialized[]): boolean {
+        return true
     }
 
-    append(constructor: Build) {
-        const result = this.create(constructor)
+    // createElement(element: string | Build | Element) {
+    //     if (typeof element === 'string') {
+    //         return document.createElement(element)
+    //     }
 
-        this.root.append(result)
+    //     if (element instanceof Element) {
+    //         return element
+    //     }
 
-        return result
-    }
+    //     return this.create(element) as Element
+    // }
 
-    format(serialized: Serialized[]) {
-        if (serialized.length === 0) {
-            this.append({
-                element: 'p',
-                children: {
-                    element: 'br'
-                }
-            })
-            return
-        }
+    // createEntity(constructor: Entity) {
+    //     const extension = this.editor.findExtensionByType(constructor.type)
 
-        for (const value of serialized) {
-            if (typeof value === 'string') {
-                this.append({
-                    element: 'p',
-                    text: value
-                })
+    //     if (extension == null) {
+    //         return this.create({
+    //             element: 'span',
+    //             text: `undefined:extension:${constructor.type}`
+    //         })
+    //     }
 
-                continue
-            }
+    //     if (extension.createEntity == null) {
+    //         return this.create({
+    //             element: 'span',
+    //             text: `undefined:extension.createEntity:${constructor.type}`
+    //         })
+    //     }
 
-            if (Array.isArray(value)) {
-                this.append({
-                    element: 'p',
-                    children: value.map((value) => {
-                        if (Array.isArray(value)) {
-                            return null
-                        }
-                        
-                        if (typeof value === 'string') {
-                            return document.createTextNode(value)
-                        }
+    //     return extension.createEntity(this, constructor.data)
+    // }
 
-                        return this.createEntity(value)
-                    })
-                    .filter((value) => value != null)
-                })
-                continue
-            }
+    // create(constructor: Build): Element {
+    //     const { element, text, attribute, listener, children } = constructor
 
-            this.append({
-                element: 'p',
-                children: {
-                    element: this.createEntity(value)
-                }
-            })
-        }
-    }
+    //     if (!element && text) {
+    //         return document.createTextNode(text) as any
+    //     }
+
+    //     const parent = this.createElement(element)
+
+    //     if (attribute) {
+    //         for (const key in attribute) {
+    //             parent.setAttribute(key, String(attribute[key]))
+    //         }
+    //     }
+
+    //     if (listener) {
+    //         for (const key in listener) {
+    //             parent.addEventListener(key, listener[key])
+    //         }
+    //     }
+
+    //     if (typeof text === 'string') {
+    //         parent.append(document.createTextNode(text))
+    //         return parent
+    //     }
+
+    //     if (children == null || Array.isArray(children)) {
+    //         for (const node of children || []) {
+    //             if (node == null) {
+    //                 continue
+    //             }
+
+    //             if (node instanceof Element || node instanceof Text) {
+    //                 parent.append(node)
+    //                 continue
+    //             }
+
+    //             parent.append(this.create(node))
+    //         }
+
+    //         return parent
+    //     }
+
+    //     parent.append(this.create(children))
+
+    //     return parent
+    // }
+
+    // append(constructor: Build) {
+    //     const { element, text, children } = constructor
+
+    //     if (!element && !text && Array.isArray(children)) {
+    //         for (const node of children) {
+    //             this.root.append(this.create(node as Build))
+    //         }
+
+    //         return this.root
+    //     }
+
+    //     const result = this.create(constructor)
+
+    //     this.root.append(result)
+
+    //     return result
+    // }
+
+    // format(serialized: Serialized[]) {
+    //     if (serialized.length === 0) {
+    //         this.append({
+    //             element: 'p',
+    //             children: {
+    //                 element: 'br'
+    //             }
+    //         })
+    //         return
+    //     }
+
+    //     for (const value of serialized) {
+    //         if (typeof value === 'string') {
+    //             this.append({
+    //                 element: 'p',
+    //                 text: value
+    //             })
+
+    //             continue
+    //         }
+
+    //         if (Array.isArray(value)) {
+    //             this.append({
+    //                 element: 'p',
+    //                 children: value.map((value) => {
+    //                     if (Array.isArray(value)) {
+    //                         return null
+    //                     }
+
+    //                     if (typeof value === 'string') {
+    //                         return document.createTextNode(value)
+    //                     }
+
+    //                     return this.createEntity(value)
+    //                 })
+    //                 .filter((value) => value != null)
+    //             })
+    //             continue
+    //         }
+
+    //         this.append({
+    //             element: 'p',
+    //             children: {
+    //                 element: this.createEntity(value)
+    //             }
+    //         })
+    //     }
+    // }
 
     isEmpty(): boolean {
         return this.root.innerHTML === EMPTY

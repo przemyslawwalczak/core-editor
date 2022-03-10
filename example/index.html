@@ -45,15 +45,17 @@
                 console.log('creating entity:', data)
 
                 return dom.create({
-                    element: 'span',
-                    attribute: {
-                        class: 'mention',
-                        contenteditable: false
-                    },
                     children: [
-                        { text: "{guard:left}" },
-                        { text: `@${data.name}`},
-                        { text: "{guard:right}" },
+                        { text: "\uFEFF" },
+                        {
+                            element: 'span',
+                            text: `@${data.name}`,
+                            attribute: {
+                                class: 'mention',
+                                contenteditable: false
+                            },
+                        },
+                        { text: "\uFEFF" },
                     ]
                 })
             }

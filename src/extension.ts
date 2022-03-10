@@ -11,7 +11,7 @@ export class Extension<T> {
         this.editor = editor
     }
 
-    createEntity?(dom: DocumentObjectModel<T>, data?: any): Element
+    createEntity?(dom: DocumentObjectModel<T>, data?: any): Element | Text | (Element | Text)[]
 
     serialize?(): void
     deserialize?(): void

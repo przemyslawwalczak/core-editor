@@ -94,8 +94,15 @@ export class Content<T> {
         const { container } = this.editor
 
         container.setAttribute('contenteditable', 'false')
-        this.dom.format(value)
+
+        if (!this.dom.format(value)) {
+            console.warn(`Failed to deserialize value of:`, value)
+            return false
+        }
+
         container.setAttribute('contenteditable', 'true')
+
+        return true
     }
 
     serialize(): Serialized[] {
