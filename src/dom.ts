@@ -7,18 +7,18 @@ export interface Entity {
 
 export type Serialized = string | Entity | Serialized[]
 
-export function isEntity(value: Entity): value is Entity {
+export function isEntity(value: any): value is Entity {
     return value && value.type != null
 }
 
 export const EMPTY = '<p><br></p>'
 
-export interface ElementDescriptor {
-    element?: string | ElementDescriptor | Element
+export interface Template {
+    element?: string | Element
     text?: string
     attribute?: { [key: string]: boolean | number | string }
     listener?: { [key: string]: () => void }
-    children?: ElementDescriptor[] | (Element | Text | null)[] | ElementDescriptor
+    children?: Template[] | (Element | Text)[] | Template | Element | Text
 }
 
 export class DocumentObjectModel<T> {
@@ -30,8 +30,102 @@ export class DocumentObjectModel<T> {
         this.root = editor.container
     }
 
-    create({ element, attribute, text, listener, children }: ElementDescriptor) {
+    createChildren(children: Template['children']) {
+        const result = [] as (Element | Text)[]
 
+        if (children == null) {
+            return result
+        }
+
+        if (Array.isArray(children)) {
+            for (const node of children) {
+                if (node instanceof Element || node instanceof Text) {
+                    result.push(node)
+                    continue
+                }
+
+                const nodes = this.create(node)
+
+                if (Array.isArray(nodes)) {
+                    result.push(...nodes)
+                    continue
+                }
+
+                result.push(nodes)
+            }
+
+            return result
+        }
+
+        if (children instanceof Element || children instanceof Text) {
+            result.push(children)
+            return result
+        }
+
+        const nodes = this.create(children)
+
+        if (Array.isArray(nodes)) {
+            result.push(...nodes)
+            return result
+        }
+
+        result.push(nodes)
+
+        return result
+    }
+
+    create({ element, attribute, text, listener, children }: Template) {
+        if (element) {
+            const parent = this.createElement(element)
+
+            if (text) {
+                parent.textContent = text
+            }
+
+            if (attribute) {
+                for (const key in attribute) {
+                    parent.setAttribute(key, String(attribute[key]))
+                }
+            }
+
+            if (listener) {
+                for (const key in listener) {
+                    parent.addEventListener(key, listener[key])
+                }
+            }
+
+            if (children) {
+                parent.append(...this.createChildren(children))
+            }
+
+            return parent
+        }
+
+        if (text) {
+            const parent = this.createText(text)
+
+            if (listener) {
+                for (const key in listener) {
+                    parent.addEventListener(key, listener[key])
+                }
+            }
+
+            return parent
+        }
+
+        return this.createChildren(children)
+    }
+
+    createElement(type: string | Element) {
+        if (typeof type === 'string') {
+            return document.createElement(type)
+        }
+
+        return type
+    }
+
+    createText(text: string) {
+        return document.createTextNode(text)
     }
 
     createEntity({ type, data }: Entity) {
@@ -54,156 +148,77 @@ export class DocumentObjectModel<T> {
         return extension.createEntity(this, data)
     }
 
-    format(serialized: Serialized[]): boolean {
+    /**
+     * Shallow formatter of serialized structure back to the HTML representation.
+     *
+     * @param target Element
+     * @param serialized Serialized[]
+     * @returns
+     */
+    format(target: Element, serialized: Serialized[]): boolean {
+        for (const node of serialized) {
+            if (typeof node === 'string') {
+                /**
+                 * Formatting paragraphs from string only.
+                 */
+                target.append(
+                    // TODO: If the text is empty after trimming, we should add a children of element tag <br>
+                    this.create({
+                        element: 'p',
+                        text: node
+                    }) as Element
+                )
+
+                continue
+            }
+
+            if (isEntity(node)) {
+                /**
+                 * Entity sole paragraph, appending their elements as children of paragraph, back to the target.
+                 */
+                const entity = this.create({
+                    element: 'p',
+                    children: this.createEntity(node)
+                })
+
+                target.append(entity as Element)
+
+                continue
+            }
+
+            const paragraph = this.create({
+                element: 'p'
+            }) as Element
+
+            /**
+             * Formatting serialized array and appending the results to the paragraph.
+             */
+            for (const child of node) {
+                if (typeof child === 'string') {
+                    paragraph.append(this.createText(child))
+                    continue
+                }
+
+                if (!isEntity(child)) {
+                    continue
+                }
+
+                const entity = this.createEntity(child)
+
+                if (entity instanceof Element || entity instanceof Text) {
+                    paragraph.append(entity)
+                    continue
+                }
+
+                paragraph.append(...entity)
+            }
+
+            target.append(paragraph)
+        }
+
+        // NOTE: We are always returning true, as we don't know if any of these will succeed while formatting (for now).
         return true
     }
-
-    // createElement(element: string | Build | Element) {
-    //     if (typeof element === 'string') {
-    //         return document.createElement(element)
-    //     }
-
-    //     if (element instanceof Element) {
-    //         return element
-    //     }
-
-    //     return this.create(element) as Element
-    // }
-
-    // createEntity(constructor: Entity) {
-    //     const extension = this.editor.findExtensionByType(constructor.type)
-
-    //     if (extension == null) {
-    //         return this.create({
-    //             element: 'span',
-    //             text: `undefined:extension:${constructor.type}`
-    //         })
-    //     }
-
-    //     if (extension.createEntity == null) {
-    //         return this.create({
-    //             element: 'span',
-    //             text: `undefined:extension.createEntity:${constructor.type}`
-    //         })
-    //     }
-
-    //     return extension.createEntity(this, constructor.data)
-    // }
-
-    // create(constructor: Build): Element {
-    //     const { element, text, attribute, listener, children } = constructor
-
-    //     if (!element && text) {
-    //         return document.createTextNode(text) as any
-    //     }
-
-    //     const parent = this.createElement(element)
-
-    //     if (attribute) {
-    //         for (const key in attribute) {
-    //             parent.setAttribute(key, String(attribute[key]))
-    //         }
-    //     }
-
-    //     if (listener) {
-    //         for (const key in listener) {
-    //             parent.addEventListener(key, listener[key])
-    //         }
-    //     }
-
-    //     if (typeof text === 'string') {
-    //         parent.append(document.createTextNode(text))
-    //         return parent
-    //     }
-
-    //     if (children == null || Array.isArray(children)) {
-    //         for (const node of children || []) {
-    //             if (node == null) {
-    //                 continue
-    //             }
-
-    //             if (node instanceof Element || node instanceof Text) {
-    //                 parent.append(node)
-    //                 continue
-    //             }
-
-    //             parent.append(this.create(node))
-    //         }
-
-    //         return parent
-    //     }
-
-    //     parent.append(this.create(children))
-
-    //     return parent
-    // }
-
-    // append(constructor: Build) {
-    //     const { element, text, children } = constructor
-
-    //     if (!element && !text && Array.isArray(children)) {
-    //         for (const node of children) {
-    //             this.root.append(this.create(node as Build))
-    //         }
-
-    //         return this.root
-    //     }
-
-    //     const result = this.create(constructor)
-
-    //     this.root.append(result)
-
-    //     return result
-    // }
-
-    // format(serialized: Serialized[]) {
-    //     if (serialized.length === 0) {
-    //         this.append({
-    //             element: 'p',
-    //             children: {
-    //                 element: 'br'
-    //             }
-    //         })
-    //         return
-    //     }
-
-    //     for (const value of serialized) {
-    //         if (typeof value === 'string') {
-    //             this.append({
-    //                 element: 'p',
-    //                 text: value
-    //             })
-
-    //             continue
-    //         }
-
-    //         if (Array.isArray(value)) {
-    //             this.append({
-    //                 element: 'p',
-    //                 children: value.map((value) => {
-    //                     if (Array.isArray(value)) {
-    //                         return null
-    //                     }
-
-    //                     if (typeof value === 'string') {
-    //                         return document.createTextNode(value)
-    //                     }
-
-    //                     return this.createEntity(value)
-    //                 })
-    //                 .filter((value) => value != null)
-    //             })
-    //             continue
-    //         }
-
-    //         this.append({
-    //             element: 'p',
-    //             children: {
-    //                 element: this.createEntity(value)
-    //             }
-    //         })
-    //     }
-    // }
 
     isEmpty(): boolean {
         return this.root.innerHTML === EMPTY

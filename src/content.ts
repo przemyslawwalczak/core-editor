@@ -95,7 +95,7 @@ export class Content<T> {
 
         container.setAttribute('contenteditable', 'false')
 
-        if (!this.dom.format(value)) {
+        if (!this.dom.format(container, value)) {
             console.warn(`Failed to deserialize value of:`, value)
             return false
         }
