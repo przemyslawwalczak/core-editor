@@ -161,14 +161,22 @@ export class DocumentObjectModel<T> {
                 /**
                  * Formatting paragraphs from string only.
                  */
-                target.append(
-                    // TODO: If the text is empty after trimming, we should add a children of element tag <br>
-                    this.create({
-                        element: 'p',
-                        text: node
-                    }) as Element
-                )
+                const paragraph: Template = {
+                    element: 'p'
+                }
 
+                if (!node.trim().length) {
+                    paragraph.children = {
+                        element: 'br'
+                    }
+
+                    target.append(this.create(paragraph) as Element)
+                    continue
+                }
+
+                paragraph.text = node
+
+                target.append(this.create(paragraph) as Element)
                 continue
             }
 
