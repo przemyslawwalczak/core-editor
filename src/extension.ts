@@ -20,6 +20,10 @@ export class Extension<T> {
     [EVENT_TYPE.ON_SELECTION_CHANGE]?(event: Event): boolean | void
     [EVENT_TYPE.AFTER_SELECTION_CHANGE]?(event: Event): boolean | void
 
+    [EVENT_TYPE.BEFORE_MUTATION_CHANGE]?(event: Event): boolean | void
+    [EVENT_TYPE.ON_MUTATION_CHANGE]?(event: Event): boolean | void
+    [EVENT_TYPE.AFTER_MUTATION_CHANGE]?(event: Event): boolean | void
+
     [EVENT_TYPE.BEFORE_KEY_DOWN]?(event: KeyboardEvent): boolean | void
     [EVENT_TYPE.ON_KEY_DOWN]?(event: KeyboardEvent): boolean | void
     [EVENT_TYPE.AFTER_KEY_DOWN]?(event: KeyboardEvent): boolean | void

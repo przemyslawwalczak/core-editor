@@ -36,7 +36,11 @@
 <body>
     <div id="editor"></div>
     <script>
-        class Mentions extends window['core-editor'].Extension {
+        const { Extension, Editor, EVENT_TYPE } = window['core-editor']
+
+        console.log(EVENT_TYPE)
+
+        class Mentions extends Extension {
             constructor(editor) {
                 super('mention', editor)
             }
@@ -62,7 +66,7 @@
         }
 
         const container = document.getElementById('editor')
-        const editor = new window['core-editor'].Editor({
+        const editor = new Editor({
             attach: container,
             extensions: (editor) => [
                 new Mentions(editor)

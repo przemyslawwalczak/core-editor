@@ -22,7 +22,7 @@ export class Content<T> {
         addEventListener(this.editor.container, 'cut',       (event) => this.onCut(event))
         addEventListener(this.editor.container, 'copy',      (event) => this.onCopy(event))
 
-        this.observer = new MutationObserver((mutations) => this.onMutation(mutations))
+        this.observer = new MutationObserver((mutations) => this.onMutations(mutations))
 
         this.observer.observe(this.editor.container, {
             childList: true,
@@ -34,8 +34,20 @@ export class Content<T> {
         })
     }
 
-    onMutation(mutations: MutationRecord[]) {
-        console.log("on mutation:", mutations);
+    onMutation(mutation: MutationRecord) {
+        const event = new CustomEvent('mutation', {
+            detail: mutation
+        })
+
+        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_KEY_UP, event)
+        this.editor.callExtensionEvent(EVENT_TYPE.ON_KEY_UP, event)
+        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_KEY_UP, event)
+    }
+
+    onMutations(mutations: MutationRecord[]) {
+        for (const mutation of mutations) {
+            this.onMutation(mutation)
+        }
     }
 
     onKeyUp(event: KeyboardEvent) {
@@ -61,8 +73,8 @@ export class Content<T> {
     }
 
     onCompositionEnd(event: CompositionEvent) {
-        if (event.data.lastIndexOf("\n") === event.data.length - 1) {
-			this.editor.selection.toNextLine();
+        if (event.data.lastIndexOf("\n") === event.data.length - 1 && event.target) {
+			this.editor.selection.toNextLine(event.target);
 		}
     }
 

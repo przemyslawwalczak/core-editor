@@ -91,7 +91,7 @@ export class Selection<T> {
         return -1
     }
 
-    toNextLine() {
+    toNextLine(target: EventTarget) {
         const selection = this.getSelection()
 
         if (selection == null) {
