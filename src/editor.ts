@@ -33,6 +33,16 @@ export class Editor<T> {
         this.selection = new Selection(this)
     }
 
+    getSelection() {
+        return this.selection.getSelection()
+    }
+
+    getVirtualAttributes(target: any) {
+        console.log('getting virtual attributes:', this.content)
+
+        return this.content.dom.vAttributes.get(target) || null
+    }
+
     findExtensionByType(type: string) {
         for (const extension of this.extension) {
             if (extension.type === type) {
@@ -43,17 +53,17 @@ export class Editor<T> {
         return null
     }
 
-    callExtensionEvent(type: EVENT_TYPE, event: Event): boolean {
+    callExtensionEvent(type: EVENT_TYPE, event: Event | MutationRecord): boolean {
         // TODO: Pre-caching extension handlers per EVENT type.
 
         for (const extension of this.extension) {
-            const handler = extension[type]
+            const handler = extension[type] as any
 
             if (handler == null) {
                 continue
             }
 
-            if (handler(event as any)) {
+            if (handler.call(extension, event as any)) {
                 return true
             }
         }

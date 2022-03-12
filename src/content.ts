@@ -35,13 +35,12 @@ export class Content<T> {
     }
 
     onMutation(mutation: MutationRecord) {
-        const event = new CustomEvent('mutation', {
-            detail: mutation
-        })
+        console.log('on mutation:', this)
+        console.log('on editor:', this.editor)
 
-        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_KEY_UP, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.ON_KEY_UP, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_KEY_UP, event)
+        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_MUTATION_CHANGE, mutation)
+        this.editor.callExtensionEvent(EVENT_TYPE.ON_MUTATION_CHANGE, mutation)
+        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_MUTATION_CHANGE, mutation)
     }
 
     onMutations(mutations: MutationRecord[]) {

@@ -36,34 +36,44 @@
 <body>
     <div id="editor"></div>
     <script>
-        const { Extension, Editor, EVENT_TYPE } = window['core-editor']
+        const { Extension, Editor, EVENT_TYPE, Mentions } = window['core-editor']
 
-        console.log(EVENT_TYPE)
+        // console.log(EVENT_TYPE)
 
-        class Mentions extends Extension {
-            constructor(editor) {
-                super('mention', editor)
-            }
+        // class Mentions extends Extension {
+        //     constructor(editor) {
+        //         super('mention', editor)
+        //     }
 
-            createEntity(dom, data) {
-                console.log('creating entity:', data)
-
-                return dom.create({
-                    children: [
-                        { text: "\uFEFF" },
-                        {
-                            element: 'span',
-                            text: `@${data.name}`,
-                            attribute: {
-                                class: 'mention',
-                                contenteditable: false
-                            },
-                        },
-                        { text: "\uFEFF" },
-                    ]
-                })
-            }
-        }
+        //     createEntity(dom, data) {
+        //         return dom.create({
+        //             children: [
+        //                 {
+        //                     text: "\uFEFF",
+        //                     attribute: {
+        //                         guard: true,
+        //                         direction: 'left'
+        //                     }
+        //                 },
+        //                 {
+        //                     element: 'span',
+        //                     text: `@${data.name}`,
+        //                     attribute: {
+        //                         class: 'mention',
+        //                         contenteditable: false
+        //                     },
+        //                 },
+        //                 {
+        //                     text: "\uFEFF",
+        //                     attribute: {
+        //                         guard: true,
+        //                         direction: 'right'
+        //                     }
+        //                 },
+        //             ]
+        //         })
+        //     }
+        // }
 
         const container = document.getElementById('editor')
         const editor = new Editor({

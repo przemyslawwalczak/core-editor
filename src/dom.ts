@@ -16,18 +16,21 @@ export const EMPTY = '<p><br></p>'
 export interface Template {
     element?: string | Element
     text?: string
-    attribute?: { [key: string]: boolean | number | string }
+    attribute?: { [key: string]: any }
     listener?: { [key: string]: () => void }
-    children?: Template[] | (Element | Text)[] | Template | Element | Text
+    children?: (Template | Element | Text)[] | Template | Element | Text
 }
 
 export class DocumentObjectModel<T> {
     editor: Editor<T>
     root: Element
+    vAttributes: WeakMap<Text | Element, any>
 
     constructor(editor: Editor<T>) {
         this.editor = editor
         this.root = editor.container
+
+        this.vAttributes = new WeakMap()
     }
 
     createChildren(children: Template['children']) {
@@ -108,6 +111,10 @@ export class DocumentObjectModel<T> {
                 for (const key in listener) {
                     parent.addEventListener(key, listener[key])
                 }
+            }
+
+            if (attribute) {
+                this.vAttributes.set(parent, attribute)
             }
 
             return parent
@@ -226,6 +233,18 @@ export class DocumentObjectModel<T> {
 
         // NOTE: We are always returning true, as we don't know if any of these will succeed while formatting (for now).
         return true
+    }
+
+    setAttribute(target: Text | Element, attribute: any) {
+        const result = this.vAttributes.get(target) || {}
+        const record = {
+            ...result,
+            ...attribute
+        }
+
+        this.vAttributes.set(target, record)
+
+        return record
     }
 
     isEmpty(): boolean {

@@ -7,12 +7,17 @@ export class CurrentSelection {
     private _selection: DocumentSelection
     anchor: Node | null
     focus: Node | null
+    index: number
+    length: number
 
-    constructor(selection: DocumentSelection) {
+    constructor(container: Element, selection: DocumentSelection) {
         this._selection = selection
 
         this.anchor = selection.anchorNode || null
-        this.focus = selection.anchorNode || null
+        this.focus = selection.focusNode || null
+
+        this.index = selection.anchorOffset || 0
+        this.length = selection.anchorOffset || 0
     }
 
     setRange(range: Range) {
@@ -51,7 +56,7 @@ export class Selection<T> {
 
         // TODO: Return normalized selection
 
-        return new CurrentSelection(selection)
+        return new CurrentSelection(this.editor.container, selection)
     }
 
     findSelectedLine(selection = this.getSelection()) {
