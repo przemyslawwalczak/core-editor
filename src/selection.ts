@@ -119,18 +119,20 @@ export class Selection<T> {
         return -1
     }
 
-    toNextLine(target: Element) {
+    toNextLine(target?: Element) {
         const selection = this.getSelection()
 
         if (selection == null) {
             return false
         }
 
-        const currentLine = this.findSelectedLineByElement(target, selection)
+        const currentLine = target ? this.findSelectedLineByElement(target, selection) : this.findSelectedLine(selection)
 
         if (currentLine == null) {
             return false
         }
+
+        console.log('to nextLine:', currentLine)
 
         const currentLineIndex = this.getChildrenIndex(currentLine as Element)
 

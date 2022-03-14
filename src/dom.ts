@@ -163,6 +163,12 @@ export class DocumentObjectModel<T> {
      * @returns
      */
     format(target: Element, serialized: Serialized[]): boolean {
+        if (serialized.length === 0) {
+            this.root.innerHTML = EMPTY
+            
+            return true
+        }
+
         for (const node of serialized) {
             if (typeof node === 'string') {
                 /**

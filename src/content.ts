@@ -72,10 +72,10 @@ export class Content<T> {
     }
 
     onCompositionEnd(event: CompositionEvent) {
-        console.log('event:', event)
+        console.log('[compositionend] event:', event)
 
         if (event.data.lastIndexOf("\n") === event.data.length - 1 && event.target) {
-			this.editor.selection.toNextLine(event.target as Element);
+			this.editor.selection.toNextLine();
 		}
     }
 
