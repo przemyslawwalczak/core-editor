@@ -16,6 +16,7 @@ export class CurrentSelection {
         this.anchor = selection.anchorNode || null
         this.focus = selection.focusNode || null
 
+        // TODO: Get index and length of the container.
         this.index = selection.anchorOffset || 0
         this.length = selection.anchorOffset || 0
     }
@@ -23,6 +24,10 @@ export class CurrentSelection {
     setRange(range: Range) {
         this._selection.removeAllRanges()
         this._selection.addRange(range)
+    }
+
+    isCollapsed() {
+        return this._selection.isCollapsed
     }
 }
 
@@ -83,6 +88,24 @@ export class Selection<T> {
         return result
     }
 
+    findSelectedLineByElement(target: Element, selection = this.getSelection()) {
+        if (!this.isCurrentlySelected(selection)) {
+            return null
+        }
+
+        let result = target
+
+        while (result && result.parentElement !== this.editor.container) {
+            if (result.parentElement == null) {
+                return null
+            }
+
+            result = result.parentElement
+        }
+
+        return result
+    }
+
     getChildrenIndex(target: Element) {
         for (let index=0; index<this.editor.container.children.length; index++) {
             const children = this.editor.container.children[index]
@@ -96,14 +119,14 @@ export class Selection<T> {
         return -1
     }
 
-    toNextLine(target: EventTarget) {
+    toNextLine(target: Element) {
         const selection = this.getSelection()
 
         if (selection == null) {
             return false
         }
 
-        const currentLine = this.findSelectedLine(selection)
+        const currentLine = this.findSelectedLineByElement(target, selection)
 
         if (currentLine == null) {
             return false

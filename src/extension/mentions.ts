@@ -10,8 +10,6 @@ export class Mentions<T> extends Extension<T> {
     }
 
     [EVENT_TYPE.ON_MUTATION_CHANGE](event: MutationRecord) {
-        console.log('on mutation change:', event)
-
         const { target } = event
 
         if (target == null) {
@@ -20,13 +18,14 @@ export class Mentions<T> extends Extension<T> {
 
         const attribute = this.editor.getVirtualAttributes(target)
 
-        console.log('attribute:', attribute)
-
         if (attribute == null || !attribute.guard || !(target instanceof Text)) {
             return false
         }
 
         const isRemoved = target.length === 0
+
+        // TODO: Additional mutation like changing text is required to add text node or switch to the selection of this node when
+        // mutation guard node.
 
         switch (attribute.direction) {
             case 'left': {
@@ -35,8 +34,6 @@ export class Mentions<T> extends Extension<T> {
                     attribute.parent.remove()
                     return true
                 }
-
-                console.log('left guard mutation')
                 return false
             }
 
@@ -46,8 +43,6 @@ export class Mentions<T> extends Extension<T> {
                     attribute.parent.remove()
                     return true
                 }
-
-                console.log('right guard mutation')
                 return false
             }
         }
@@ -60,8 +55,22 @@ export class Mentions<T> extends Extension<T> {
             return false
         }
 
+        console.log('[selection] anchor:', selection.anchor)
+        console.log('[selection] focus:', selection.focus)
+
+        const attribute = {
+            anchor: this.editor.getVirtualAttributes(selection.anchor),
+            focus: this.editor.getVirtualAttributes(selection.focus),
+        }
+
+        if (selection.anchor === selection.focus && selection.isCollapsed()) {
+            return false
+        }
+
         console.log('on selection change:', event)
         console.log('selection:', selection)
+
+        
     }
 
     createEntity(dom: DocumentObjectModel<T>, data: any) {
@@ -72,7 +81,7 @@ export class Mentions<T> extends Extension<T> {
                 class: 'mention',
                 contenteditable: false
             },
-        }) as Element
+        })
 
         return dom.create({
             children: [
@@ -84,7 +93,7 @@ export class Mentions<T> extends Extension<T> {
                         direction: 'left'
                     }
                 },
-                mention,
+                mention as Element,
                 {
                     text: "\uFEFF",
                     attribute: {

@@ -37,7 +37,7 @@ export class Editor<T> {
         return this.selection.getSelection()
     }
 
-    getVirtualAttributes(target: any) {
+    getVirtualAttributes(target: any): any | null {
         console.log('getting virtual attributes:', this.content)
 
         return this.content.dom.vAttributes.get(target) || null
