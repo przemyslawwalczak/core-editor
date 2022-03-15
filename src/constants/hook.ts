@@ -1,4 +1,4 @@
-export const enum EDITOR_HOOK {
+export enum EDITOR_HOOK {
     BEFORE_KEY_DOWN,
     ON_KEY_DOWN,
     AFTER_KEY_DOWN,
