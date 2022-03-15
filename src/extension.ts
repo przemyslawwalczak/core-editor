@@ -3,17 +3,19 @@ import { EDITOR_HOOK } from './constants/hook'
 import { DocumentObjectModel } from './dom'
 
 export class Extension<T> {
-    type: string
+    static type: string
+
     editor: Editor<T>
+    html!: Text | Element | (Text | Element)[]
 
-    constructor(type: string, editor: Editor<T>) {
-        this.type = type
+    data: any | null
+
+    constructor(editor: Editor<T>, data: any = null) {
         this.editor = editor
-
-        console.log('created extension with type of:', type, editor)
+        this.data = data
     }
 
-    createEntity?(dom: DocumentObjectModel<T>, data?: any): Element | Text | (Element | Text)[]
+    render?(editor: DocumentObjectModel<T>): Text | Element | (Text | Element)[]
 
     serialize?(): void
     deserialize?(): void

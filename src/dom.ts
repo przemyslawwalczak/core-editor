@@ -1,4 +1,5 @@
 import { Editor } from "./editor"
+import { Extension } from "./extension"
 
 export interface Entity {
     type: string
@@ -8,7 +9,7 @@ export interface Entity {
 export type Serialized = string | Entity | Serialized[]
 
 export function isEntity(value: any): value is Entity {
-    return value && value.type != null
+    return value && value.type != null && typeof value.type === 'string'
 }
 
 export const EMPTY = '<p><br></p>'
@@ -25,12 +26,14 @@ export class DocumentObjectModel<T> {
     editor: Editor<T>
     root: Element
     vAttributes: WeakMap<Text | Element, any>
+    vEntities: WeakMap<Text | Element | Node, any>
 
     constructor(editor: Editor<T>) {
         this.editor = editor
         this.root = editor.container
 
         this.vAttributes = new WeakMap()
+        this.vEntities = new WeakMap()
     }
 
     createChildren(children: Template['children']) {
@@ -136,23 +139,44 @@ export class DocumentObjectModel<T> {
     }
 
     createEntity({ type, data }: Entity) {
-        const extension = this.editor.findExtensionByType(type)
+        const Extension = this.editor.findExtensionByType(type)
 
-        if (extension == null) {
+        if (Extension == null) {
             return this.create({
                 element: 'span',
                 text: `undefined:extension:${type}`
             })
         }
 
-        if (extension.createEntity == null) {
+        const extension = new Extension(this.editor, data) as Extension<T>
+
+        if (extension.render == null) {
             return this.create({
                 element: 'span',
-                text: `undefined:extension.createEntity:${type}`
+                text: `undefined:extension:render:${type}`
             })
         }
 
-        return extension.createEntity(this, data)
+        const entity = extension.render(this)
+
+        // TODO: Clear it from vExtensions when garbage collected.
+        this.editor.vExtensions.push(extension)
+
+        if (Array.isArray(entity)) {
+            for (const node of entity) {
+                this.vEntities.set(node, {
+                    owner: extension
+                })
+            }
+
+            return entity
+        }
+
+        this.vEntities.set(entity, {
+            owner: extension
+        })
+
+        return entity
     }
 
     /**
@@ -214,17 +238,17 @@ export class DocumentObjectModel<T> {
             /**
              * Formatting serialized array and appending the results to the paragraph.
              */
-            for (const child of node) {
-                if (typeof child === 'string') {
-                    paragraph.append(this.createText(child))
+            for (const snode of node) {
+                if (typeof snode === 'string') {
+                    paragraph.append(this.createText(snode))
                     continue
                 }
 
-                if (!isEntity(child)) {
+                if (!isEntity(snode)) {
                     continue
                 }
 
-                const entity = this.createEntity(child)
+                const entity = this.createEntity(snode)
 
                 if (entity instanceof Element || entity instanceof Text) {
                     paragraph.append(entity)

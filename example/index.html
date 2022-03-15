@@ -36,7 +36,7 @@
 <body>
     <div id="editor"></div>
     <script>
-        const { Extension, Editor, EVENT_TYPE, Mentions } = window['core-editor']
+        const { Extension, Editor, EVENT_TYPE, Mentions } = window.editor
 
         // console.log(EVENT_TYPE)
 
@@ -78,8 +78,8 @@
         const container = document.getElementById('editor')
         const editor = new Editor({
             attach: container,
-            extensions: (editor) => [
-                new Mentions(editor)
+            extensions: [
+                Mentions
             ],
             value: [
                 "Hello World",

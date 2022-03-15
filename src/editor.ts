@@ -8,7 +8,7 @@ export interface EditorOptions<T> {
     attach: Element | null
     context?: T
     value?: Serialized[]
-    extensions?: (editor: Editor<T>) => Extension<T>[]
+    extensions?: typeof Extension[]
 }
 
 export class Editor<T> {
@@ -18,7 +18,8 @@ export class Editor<T> {
     content: Content<T>
     selection: Selection<T>
 
-    extension: Extension<T>[]
+    extension: typeof Extension[]
+    vExtensions: Extension<T>[]
 
     constructor(option: EditorOptions<T>) {
         if (option.attach == null || !(option.attach instanceof Element)) {
@@ -27,7 +28,9 @@ export class Editor<T> {
 
         this.container = option.attach
         this.context = option.context
-        this.extension = option.extensions ? option.extensions(this) : []
+
+        this.extension = option.extensions || []
+        this.vExtensions = []
 
         this.content = new Content(this, option.value)
         this.selection = new Selection(this)
@@ -38,12 +41,16 @@ export class Editor<T> {
     }
 
     getVirtualAttributes(target: any): any | null {
-        console.log('getting virtual attributes:', this.content)
-
         return this.content.dom.vAttributes.get(target) || null
     }
 
+    getVirtualEntity(target: any): any | null {
+        return this.content.dom.vEntities.get(target) || null
+    }
+
     findExtensionByType(type: string) {
+        console.log(this.extension)
+
         for (const extension of this.extension) {
             if (extension.type === type) {
                 return extension
@@ -56,7 +63,7 @@ export class Editor<T> {
     callExtensionEvent(type: EDITOR_HOOK, event: Event | MutationRecord): boolean {
         // TODO: Pre-caching extension handlers per EVENT type.
 
-        for (const extension of this.extension) {
+        for (const extension of this.vExtensions) {
             const handler = extension[type] as any
 
             if (handler == null) {
