@@ -1,5 +1,5 @@
 export { Editor } from "./editor"
 export { Extension } from "./extension"
-export { EVENT_TYPE } from './constants/event'
+export { EDITOR_HOOK } from './constants/hook'
 
 export { Mentions } from './extension/mentions'

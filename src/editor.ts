@@ -1,7 +1,7 @@
 import { Selection } from './selection'
 import { Content } from './content'
 import { Extension } from './extension'
-import { EVENT_TYPE } from './constants/event'
+import { EDITOR_HOOK } from './constants/hook'
 import { Serialized } from './dom'
 
 export interface EditorOptions<T> {
@@ -53,7 +53,7 @@ export class Editor<T> {
         return null
     }
 
-    callExtensionEvent(type: EVENT_TYPE, event: Event | MutationRecord): boolean {
+    callExtensionEvent(type: EDITOR_HOOK, event: Event | MutationRecord): boolean {
         // TODO: Pre-caching extension handlers per EVENT type.
 
         for (const extension of this.extension) {

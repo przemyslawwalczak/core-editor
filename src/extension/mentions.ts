@@ -2,14 +2,14 @@ import { DocumentObjectModel } from "../dom";
 import { Editor } from "../editor";
 import { Extension } from "../extension";
 
-import { EVENT_TYPE } from "../constants/event"
+import { EDITOR_HOOK } from "../constants/hook"
 
 export class Mentions<T> extends Extension<T> {
     constructor(editor: Editor<T>) {
         super('mention', editor)
     }
 
-    [EVENT_TYPE.ON_MUTATION_CHANGE](event: MutationRecord) {
+    [EDITOR_HOOK.ON_MUTATION_CHANGE](event: MutationRecord) {
         const { target } = event
 
         if (target == null) {
@@ -48,7 +48,7 @@ export class Mentions<T> extends Extension<T> {
         }
     }
 
-    [EVENT_TYPE.ON_SELECTION_CHANGE](event: Event) {
+    [EDITOR_HOOK.ON_SELECTION_CHANGE](event: Event) {
         const selection = this.editor.getSelection()
 
         if (selection == null) {

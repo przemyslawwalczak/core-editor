@@ -1,4 +1,4 @@
-import { Editor, EVENT_TYPE } from './index'
+import { Editor, EDITOR_HOOK } from './index'
 import { addEventListener, isChildrenOf } from './utils'
 
 type DocumentSelection = globalThis.Selection
@@ -230,9 +230,9 @@ export class Selection<T> {
             return
         }
 
-        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_SELECTION_CHANGE, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.ON_SELECTION_CHANGE, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_SELECTION_CHANGE, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_SELECTION_CHANGE, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.ON_SELECTION_CHANGE, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_SELECTION_CHANGE, event)
     }
 
     detach() {

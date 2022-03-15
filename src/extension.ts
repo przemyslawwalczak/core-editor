@@ -1,5 +1,5 @@
 import { Editor } from './index'
-import { EVENT_TYPE } from './constants/event'
+import { EDITOR_HOOK } from './constants/hook'
 import { DocumentObjectModel } from './dom'
 
 export class Extension<T> {
@@ -18,31 +18,31 @@ export class Extension<T> {
     serialize?(): void
     deserialize?(): void
 
-    [EVENT_TYPE.BEFORE_SELECTION_CHANGE]?(event: Event): boolean | void
-    [EVENT_TYPE.ON_SELECTION_CHANGE]?(event: Event): boolean | void
-    [EVENT_TYPE.AFTER_SELECTION_CHANGE]?(event: Event): boolean | void
+    [EDITOR_HOOK.BEFORE_SELECTION_CHANGE]?(event: Event): boolean | void
+    [EDITOR_HOOK.ON_SELECTION_CHANGE]?(event: Event): boolean | void
+    [EDITOR_HOOK.AFTER_SELECTION_CHANGE]?(event: Event): boolean | void
 
-    [EVENT_TYPE.BEFORE_MUTATION_CHANGE]?(event: MutationRecord): boolean | void
-    [EVENT_TYPE.ON_MUTATION_CHANGE]?(event: MutationRecord): boolean | void
-    [EVENT_TYPE.AFTER_MUTATION_CHANGE]?(event: MutationRecord): boolean | void
+    [EDITOR_HOOK.BEFORE_MUTATION_CHANGE]?(event: MutationRecord): boolean | void
+    [EDITOR_HOOK.ON_MUTATION_CHANGE]?(event: MutationRecord): boolean | void
+    [EDITOR_HOOK.AFTER_MUTATION_CHANGE]?(event: MutationRecord): boolean | void
 
-    [EVENT_TYPE.BEFORE_KEY_DOWN]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.ON_KEY_DOWN]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.AFTER_KEY_DOWN]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.BEFORE_KEY_DOWN]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.ON_KEY_DOWN]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.AFTER_KEY_DOWN]?(event: KeyboardEvent): boolean | void
 
-    [EVENT_TYPE.BEFORE_KEY_UP]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.ON_KEY_UP]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.AFTER_KEY_UP]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.BEFORE_KEY_UP]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.ON_KEY_UP]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.AFTER_KEY_UP]?(event: KeyboardEvent): boolean | void
 
-    [EVENT_TYPE.BEFORE_PASTE]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.ON_PASTE]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.AFTER_PASTE]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.BEFORE_PASTE]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.ON_PASTE]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.AFTER_PASTE]?(event: KeyboardEvent): boolean | void
 
-    [EVENT_TYPE.BEFORE_CUT]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.ON_CUT]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.AFTER_CUT]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.BEFORE_CUT]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.ON_CUT]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.AFTER_CUT]?(event: KeyboardEvent): boolean | void
 
-    [EVENT_TYPE.BEFORE_COPY]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.ON_COPY]?(event: KeyboardEvent): boolean | void
-    [EVENT_TYPE.AFTER_COPY]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.BEFORE_COPY]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.ON_COPY]?(event: KeyboardEvent): boolean | void
+    [EDITOR_HOOK.AFTER_COPY]?(event: KeyboardEvent): boolean | void
 }

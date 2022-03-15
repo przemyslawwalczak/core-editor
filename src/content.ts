@@ -1,4 +1,4 @@
-import { Editor, EVENT_TYPE } from './index'
+import { Editor, EDITOR_HOOK } from './index'
 import { addEventListener } from './utils'
 import { isRemoving } from './keyboard'
 import { DocumentObjectModel, Serialized } from './dom'
@@ -38,9 +38,9 @@ export class Content<T> {
         console.log('on mutation:', this)
         console.log('on editor:', this.editor)
 
-        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_MUTATION_CHANGE, mutation)
-        this.editor.callExtensionEvent(EVENT_TYPE.ON_MUTATION_CHANGE, mutation)
-        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_MUTATION_CHANGE, mutation)
+        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_MUTATION_CHANGE, mutation)
+        this.editor.callExtensionEvent(EDITOR_HOOK.ON_MUTATION_CHANGE, mutation)
+        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_MUTATION_CHANGE, mutation)
     }
 
     onMutations(mutations: MutationRecord[]) {
@@ -50,25 +50,25 @@ export class Content<T> {
     }
 
     onKeyUp(event: KeyboardEvent) {
-        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_KEY_UP, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_KEY_UP, event)
 
         if (this.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
             event.preventDefault()
         }
 
-        this.editor.callExtensionEvent(EVENT_TYPE.ON_KEY_UP, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_KEY_UP, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.ON_KEY_UP, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_KEY_UP, event)
     }
 
     onKeyDown(event: KeyboardEvent) {
-        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_KEY_DOWN, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_KEY_DOWN, event)
 
         if (this.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
             event.preventDefault()
         }
 
-        this.editor.callExtensionEvent(EVENT_TYPE.ON_KEY_DOWN, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_KEY_DOWN, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.ON_KEY_DOWN, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_KEY_DOWN, event)
     }
 
     onCompositionEnd(event: CompositionEvent) {
@@ -82,25 +82,25 @@ export class Content<T> {
     onPaste(event: Event) {
         event.preventDefault()
 
-        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_PASTE, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.ON_PASTE, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_PASTE, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_PASTE, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.ON_PASTE, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_PASTE, event)
     }
 
     onCut(event: Event) {
         event.preventDefault()
 
-        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_CUT, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.ON_CUT, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_CUT, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_CUT, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.ON_CUT, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_CUT, event)
     }
 
     onCopy(event: Event) {
         event.preventDefault()
 
-        this.editor.callExtensionEvent(EVENT_TYPE.BEFORE_COPY, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.ON_COPY, event)
-        this.editor.callExtensionEvent(EVENT_TYPE.AFTER_COPY, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_COPY, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.ON_COPY, event)
+        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_COPY, event)
     }
 
     deserialize(value: Serialized[]) {
