@@ -63,14 +63,37 @@ export class Mentions<T> extends Extension<T> {
             focus: this.editor.getVirtualAttributes(selection.focus),
         }
 
-        if (selection.anchor === selection.focus && selection.isCollapsed()) {
+        if (
+            attribute.anchor == null || !attribute.anchor.guard ||
+            attribute.focus == null || !attribute.focus.guard
+        ) {
             return false
+        }
+
+        if (selection.anchor === selection.focus && selection.isCollapsed()) {
+            console.log('collapsed selection:', attribute)
+
+            switch (attribute.anchor.direction) {
+                case 'left': {
+                    // TODO: Create Text node on the left side of guard
+                    selection.anchorCreateTextNode('\uFEFF', -1)
+                    selection.toBefore(selection.anchor)
+                    return true
+                }
+
+                case 'right': {
+                    // TODO: Create Text node on the right side of guard
+                    selection.anchorCreateTextNode('\uFEFF', 1)
+                    selection.toAfter(selection.anchor)
+                    return true
+                }
+            }
         }
 
         console.log('on selection change:', event)
         console.log('selection:', selection)
 
-        
+
     }
 
     createEntity(dom: DocumentObjectModel<T>, data: any) {

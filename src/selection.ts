@@ -3,6 +3,11 @@ import { addEventListener, isChildrenOf } from './utils'
 
 type DocumentSelection = globalThis.Selection
 
+export enum DIRECTION {
+    LEFT,
+    RIGHT,
+}
+
 export class CurrentSelection {
     private _selection: DocumentSelection
     anchor: Node | null
@@ -24,6 +29,62 @@ export class CurrentSelection {
     setRange(range: Range) {
         this._selection.removeAllRanges()
         this._selection.addRange(range)
+    }
+
+    addRange(range: Range) {
+        this._selection.addRange(range)
+    }
+
+    toBefore(target: Node | null, offset?: number): boolean {
+        if (target == null) {
+            return false
+        }
+
+        const range = document.createRange()
+
+        if (offset == null) {
+            range.setStartBefore(target)
+            range.setEndBefore(target)
+
+            this.setRange(range)
+
+            return true
+        }
+
+        return true
+    }
+
+    toAfter(target: Node | null, offset?: number): boolean {
+        if (target == null) {
+            return false
+        }
+
+        const range = document.createRange()
+
+        if (offset == null) {
+            range.setStartBefore(target)
+            range.setEndBefore(target)
+
+            this.setRange(range)
+
+            return true
+        }
+
+        return true
+    }
+
+    anchorCreateTextNode(text: string, direction: DIRECTION = DIRECTION.RIGHT) {
+        const node = document.createTextNode(text)
+
+        switch (direction) {
+            case DIRECTION.LEFT: {
+                // this.anchor
+            }
+
+            case DIRECTION.RIGHT: {
+
+            }
+        }
     }
 
     isCollapsed() {
