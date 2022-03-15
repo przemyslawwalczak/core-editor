@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "name": "core-editor",
-  "umd:name": "core-editor",
+  "name": "@netspacejs/editor",
+  "umd:name": "editor",
   "repository": "przemyslawwalczak/core-editor",
   "description": "Text Editor Core",
   "unpkg": "dist/index.min.js",
@@ -10,7 +10,7 @@
   "types": "types/index.d.ts",
   "license": "MIT",
   "author": {
-    "name": "Przemysław Walczak"
+    "name": "Przemysław Walczak <netspacepl>"
   },
   "files": [
     "dist",
