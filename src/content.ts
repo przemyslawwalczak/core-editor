@@ -133,7 +133,6 @@ export class Content<T> {
 			// eslint-disable-next-line no-restricted-syntax
 			for (const node of paragraph.childNodes) {
                 if (!(node instanceof Text) && !(node instanceof Element)) {
-                    console.log('paragraph skipped node:', node)
                     continue
                 }
 
