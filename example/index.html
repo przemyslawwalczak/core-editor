@@ -84,6 +84,9 @@
             </tr>
         </table>
     </div>
+    <div>
+        <button id="serialize">Serialize</button>
+    </div>
     <script>
         const { Extension, Editor } = window.editor
 
@@ -117,6 +120,10 @@
                     name: 'sftester'
                 }
             })
+        })
+
+        document.getElementById('serialize').addEventListener('click', () => {
+            console.log(editor.content.serialize())
         })
 
         console.log(editor)

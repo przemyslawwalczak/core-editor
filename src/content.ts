@@ -132,11 +132,12 @@ export class Content<T> {
 
 			// eslint-disable-next-line no-restricted-syntax
 			for (const node of paragraph.childNodes) {
-                if (!(node instanceof Text) || !(node instanceof Element)) {
+                if (!(node instanceof Text) && !(node instanceof Element)) {
+                    console.log('paragraph skipped node:', node)
                     continue
                 }
 
-				if (node.data === "\uFEFF") {
+				if (node instanceof Text && node.data === "\uFEFF") {
 					// eslint-disable-next-line no-continue
 					continue;
 				}
@@ -149,11 +150,13 @@ export class Content<T> {
 
 				const entity = this.editor.getVirtualEntity(node);
 
-				if (entity.owner) {
+				if (entity && entity.owner) {
 					serialized.push(entity.owner);
 					// eslint-disable-next-line no-continue
 					continue;
 				}
+
+                serialized.push(node.innerHTML)
 
                 // TODO: Warn about unhandled node.
 			}
