@@ -133,6 +133,23 @@ export class Selection<T> {
         return new CurrentSelection(this.editor.container, selection)
     }
 
+    setCursor(node: Node) {
+        const selection = this.getSelection()
+
+        if (!this.isCurrentlySelected(selection)) {
+            return false
+        }
+
+        const range = document.createRange()
+
+        range.setEndAfter(node)
+        range.setStartAfter(node)
+
+        selection.setRange(range)
+
+        return true
+    }
+
     replace(node: Node): boolean {
         const selection = this.getSelection()
 
@@ -149,7 +166,7 @@ export class Selection<T> {
         range.deleteContents()
         range.insertNode(node)
 
-        // TODO: Set cursor at the end of the inserted node.
+        this.setCursor(node)
 
         return true
     }
@@ -204,8 +221,6 @@ export class Selection<T> {
             }
         }
 
-        console.log('children not found')
-
         return -1
     }
 
@@ -221,8 +236,6 @@ export class Selection<T> {
         if (currentLine == null) {
             return false
         }
-
-        console.log('to nextLine:', currentLine)
 
         const currentLineIndex = this.getChildrenIndex(currentLine as Element)
 

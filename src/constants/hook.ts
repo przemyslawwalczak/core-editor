@@ -27,5 +27,3 @@ export enum EDITOR_HOOK {
     ON_MUTATION_CHANGE,
     AFTER_MUTATION_CHANGE,
 }
-
-console.log(EDITOR_HOOK)

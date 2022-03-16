@@ -35,9 +35,6 @@ export class Content<T> {
     }
 
     onMutation(mutation: MutationRecord) {
-        console.log('on mutation:', this)
-        console.log('on editor:', this.editor)
-
         this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_MUTATION_CHANGE, mutation)
         this.editor.callExtensionEvent(EDITOR_HOOK.ON_MUTATION_CHANGE, mutation)
         this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_MUTATION_CHANGE, mutation)
@@ -72,8 +69,6 @@ export class Content<T> {
     }
 
     onCompositionEnd(event: CompositionEvent) {
-        console.log('[compositionend] event:', event)
-
         if (event.data.lastIndexOf("\n") === event.data.length - 1 && event.target) {
 			this.editor.selection.toNextLine();
 		}
@@ -109,7 +104,7 @@ export class Content<T> {
         container.setAttribute('contenteditable', 'false')
 
         if (!this.dom.format(container, value)) {
-            console.warn(`Failed to deserialize value of:`, value)
+            // TODO: Waran about un-deserialized value
             return false
         }
 

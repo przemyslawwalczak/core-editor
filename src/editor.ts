@@ -94,6 +94,10 @@ export class Editor<T> {
         return false
     }
 
+    clear() {
+        this.content.dom.clear()
+    }
+
     detach() {
         this.selection.detach()
         this.content.detach()
