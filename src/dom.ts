@@ -6,10 +6,14 @@ export interface Entity {
     data?: any
 }
 
-export type Serialized = string | Entity | Serialized[]
+export type Serialized<T> = string | Entity | Extension<T> | Serialized<T>[]
 
 export function isEntity(value: any): value is Entity {
     return value && value.type != null && typeof value.type === 'string'
+}
+
+export function isExtension<T>(value: any): value is Extension<T> {
+    return value && value instanceof Extension
 }
 
 export const EMPTY = '<p><br></p>'
@@ -186,7 +190,7 @@ export class DocumentObjectModel<T> {
      * @param serialized Serialized[]
      * @returns
      */
-    format(target: Element, serialized: Serialized[]): boolean {
+    format(target: Element, serialized: Serialized<T>[]): boolean {
         if (serialized.length === 0) {
             this.root.innerHTML = EMPTY
             
@@ -231,6 +235,22 @@ export class DocumentObjectModel<T> {
                 continue
             }
 
+            if (isExtension(node)) {
+                const constructor = node.constructor as typeof Extension
+
+                const entity = this.create({
+                    element: 'p',
+                    children: this.createEntity({
+                        type: constructor.type,
+                        data: node.data,
+                    })
+                })
+
+                target.append(entity as Element)
+
+                continue
+            }
+
             const paragraph = this.create({
                 element: 'p'
             }) as Element
@@ -263,6 +283,14 @@ export class DocumentObjectModel<T> {
 
         // NOTE: We are always returning true, as we don't know if any of these will succeed while formatting (for now).
         return true
+    }
+
+    replaceWithEntity(entity: Entity): boolean {
+        // return this.editor.selection.replace(
+        //     document.createTextNode(text)
+        // )
+
+        return false
     }
 
     setAttribute(target: Text | Element, attribute: any) {

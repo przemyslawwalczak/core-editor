@@ -2,12 +2,12 @@ import { Selection } from './selection'
 import { Content } from './content'
 import { Extension } from './extension'
 import { EDITOR_HOOK } from './constants/hook'
-import { Serialized } from './dom'
+import { Entity, Serialized } from './dom'
 
 export interface EditorOptions<T> {
     attach: Element | null
     context?: T
-    value?: Serialized[]
+    value?: Serialized<T>[]
     extensions?: typeof Extension[]
 }
 
@@ -35,6 +35,24 @@ export class Editor<T> {
         this.content = new Content(this, option.value)
         this.selection = new Selection(this)
     }
+    
+    replaceWithText(text: string): boolean {
+        return this.selection.replace(
+            document.createTextNode(text)
+        )
+    }
+
+    replaceWithEntity(entity: Entity): boolean {
+        const node = this.content.dom.createEntity(entity);
+
+        if (Array.isArray(node)) {
+            return this.selection.replace(
+                document.createTextNode('replacing:with:array')
+            )
+        }
+
+        return this.selection.replace(node)
+    }
 
     getSelection() {
         return this.selection.getSelection()
@@ -49,8 +67,6 @@ export class Editor<T> {
     }
 
     findExtensionByType(type: string) {
-        console.log(this.extension)
-
         for (const extension of this.extension) {
             if (extension.type === type) {
                 return extension

@@ -9,7 +9,7 @@ export class Content<T> {
 
     observer: MutationObserver
 
-    constructor(editor: Editor<T>, value: Serialized[] = []) {
+    constructor(editor: Editor<T>, value: Serialized<T>[] = []) {
         this.editor = editor
         this.dom = new DocumentObjectModel(editor)
 
@@ -103,7 +103,7 @@ export class Content<T> {
         this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_COPY, event)
     }
 
-    deserialize(value: Serialized[]) {
+    deserialize(value: Serialized<T>[]) {
         const { container } = this.editor
 
         container.setAttribute('contenteditable', 'false')
@@ -118,10 +118,55 @@ export class Content<T> {
         return true
     }
 
-    serialize(): Serialized[] {
+    serialize(): Serialized<T>[] {
         // TODO: Serialize the content from HTML to Serialized array.
 
-        return []
+        const { container } = this.editor
+
+        const result = [];
+
+		// eslint-disable-next-line no-restricted-syntax
+		for (const paragraph of container.children) {
+			if (paragraph.innerHTML === "<br>") {
+				result.push("\n");
+				// eslint-disable-next-line no-continue
+				continue;
+			}
+
+			const serialized = [];
+
+			// eslint-disable-next-line no-restricted-syntax
+			for (const node of paragraph.childNodes) {
+                if (!(node instanceof Text) || !(node instanceof Element)) {
+                    continue
+                }
+
+				if (node.data === "\uFEFF") {
+					// eslint-disable-next-line no-continue
+					continue;
+				}
+
+				if (node instanceof Text) {
+					serialized.push(node.data);
+					// eslint-disable-next-line no-continue
+					continue;
+				}
+
+				const entity = this.editor.getVirtualEntity(node);
+
+				if (entity.owner) {
+					serialized.push(entity.owner);
+					// eslint-disable-next-line no-continue
+					continue;
+				}
+
+                // TODO: Warn about unhandled node.
+			}
+
+			result.push(serialized);
+		}
+
+		return result;
     }
 
     detach() {

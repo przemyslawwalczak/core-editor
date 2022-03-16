@@ -35,53 +35,63 @@
 </head>
 <body>
     <div id="editor"></div>
+
+    <div>
+        <table>
+            <tr>
+                <td>
+                    Replace
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <input id="text" value="friend in need" />
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <button id="replace-with-text">Replace selection with text</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div>
+        <table>
+            <tr>
+                <td>
+                    Entity Type
+                </td>
+
+                <td>
+                    Entity data.name
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <input id="entity_type" value="mention" />
+                </td>
+
+                <td>
+                    <input id="entity_data_name" value="dick" />
+                </td>
+
+                <td>
+                    <button id="replace-with-entity">Replace selection with entity</button>
+                </td>
+            </tr>
+        </table>
+    </div>
     <script>
-        const { Extension, Editor, EDITOR_HOOK, Mentions } = window.editor
-
-        console.log(EDITOR_HOOK)
-
-        // console.log(EVENT_TYPE)
-
-        // class Mentions extends Extension {
-        //     constructor(editor) {
-        //         super('mention', editor)
-        //     }
-
-        //     createEntity(dom, data) {
-        //         return dom.create({
-        //             children: [
-        //                 {
-        //                     text: "\uFEFF",
-        //                     attribute: {
-        //                         guard: true,
-        //                         direction: 'left'
-        //                     }
-        //                 },
-        //                 {
-        //                     element: 'span',
-        //                     text: `@${data.name}`,
-        //                     attribute: {
-        //                         class: 'mention',
-        //                         contenteditable: false
-        //                     },
-        //                 },
-        //                 {
-        //                     text: "\uFEFF",
-        //                     attribute: {
-        //                         guard: true,
-        //                         direction: 'right'
-        //                     }
-        //                 },
-        //             ]
-        //         })
-        //     }
-        // }
+        const { Extension, Editor } = window.editor
 
         const container = document.getElementById('editor')
         const editor = new Editor({
             attach: container,
             extensions: [
-                Mentions
+                // Mentions
             ],
             value: [
                 "Hello World",
@@ -94,6 +104,19 @@
                 "\r\n",
                 "Empty paragraph above ^"
             ]
+        })
+
+        document.getElementById('replace-with-text').addEventListener('click', () => {
+            editor.replaceWithText('test')
+        })
+
+        document.getElementById('replace-with-entity').addEventListener('click', () => {
+            editor.replaceWithEntity({
+                type: 'mention',
+                data: {
+                    name: 'sftester'
+                }
+            })
         })
 
         console.log(editor)

@@ -87,6 +87,14 @@ export class CurrentSelection {
         }
     }
 
+    hasRange() {
+        return this._selection.rangeCount > 0
+    }
+
+    getRange(index: number = 0) {
+        return this._selection.getRangeAt(index)
+    }
+
     isCollapsed() {
         return this._selection.isCollapsed
     }
@@ -123,6 +131,27 @@ export class Selection<T> {
         // TODO: Return normalized selection
 
         return new CurrentSelection(this.editor.container, selection)
+    }
+
+    replace(node: Node): boolean {
+        const selection = this.getSelection()
+
+        if (!this.isCurrentlySelected(selection)) {
+            return false
+        }
+
+        if (!selection.hasRange()) {
+            return false
+        }
+
+        const range = selection.getRange();
+
+        range.deleteContents()
+        range.insertNode(node)
+
+        // TODO: Set cursor at the end of the inserted node.
+
+        return true
     }
 
     findSelectedLine(selection = this.getSelection()) {
