@@ -116,7 +116,7 @@ export class Selection<T> {
         this.onSelectionChangeHandler = addEventListener(
             document,
             'selectionchange',
-            (event) => this.onSelectionChange(event)
+            (event) => this.editor.onSelectionChange(event)
         )
     }
 
@@ -285,16 +285,6 @@ export class Selection<T> {
         }
 
         return true
-    }
-
-    onSelectionChange(event: Event) {
-        if (!this.isCurrentlySelected()) {
-            return
-        }
-
-        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_SELECTION_CHANGE, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.ON_SELECTION_CHANGE, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_SELECTION_CHANGE, event)
     }
 
     detach() {

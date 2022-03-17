@@ -70,6 +70,16 @@ export class Editor<T> {
     getSelection() {
         return this.selection.getSelection()
     }
+    
+    onSelectionChange(event: Event) {
+        if (!this.selection.isCurrentlySelected()) {
+            return
+        }
+
+        this.callExtensionEvent(EDITOR_HOOK.BEFORE_SELECTION_CHANGE, event)
+        this.callExtensionEvent(EDITOR_HOOK.ON_SELECTION_CHANGE, event)
+        this.callExtensionEvent(EDITOR_HOOK.AFTER_SELECTION_CHANGE, event)
+    }
 
     getVirtualAttributes(target: any): any | null {
         return this.content.dom.vAttributes.get(target) || null
