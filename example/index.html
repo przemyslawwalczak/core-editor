@@ -86,6 +86,7 @@
     </div>
     <div>
         <button id="serialize">Serialize</button>
+        <button id="get-selection-text">Get Selection Text</button>
     </div>
     <script>
         const { Extension, EDITOR_HOOK, Editor } = window.editor
@@ -225,6 +226,16 @@
 
         document.getElementById('serialize').addEventListener('click', () => {
             console.log(editor.content.serialize())
+        })
+
+        document.getElementById('get-selection-text').addEventListener('click', () => {
+            const selection = editor.getSelection();
+
+            if (selection) {
+                return console.log('selected text:', selection.getText());
+            }
+
+            return console.log('has no selected text')
         })
 
         console.log(editor)

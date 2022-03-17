@@ -96,6 +96,11 @@ export class CurrentSelection {
         return this._selection.getRangeAt(index)
     }
 
+    getText() {
+        const selection = window.getSelection() || document.getSelection();
+        return selection ? selection.toString() : null
+    }
+
     isCollapsed() {
         return this._selection.isCollapsed
     }
