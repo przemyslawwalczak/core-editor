@@ -89,7 +89,47 @@
         <button id="get-selection-text">Get Selection Text</button>
     </div>
     <script>
-        const { Extension, EDITOR_HOOK, Editor } = window.editor
+        const { Extension, EDITOR_HOOK, Editor: BasicEditor } = window.editor
+
+        class Editor extends BasicEditor {
+            onCut(event) {
+                event.preventDefault();
+
+                if (!this.onCopy(event)) {
+                    return false
+                }
+
+                this.selection.replace(
+                    document.createTextNode("")
+                )
+
+                return true
+            }
+
+            onCopy(event) {
+                event.preventDefault();
+
+                const selection = this.getSelection();
+
+                if (!selection) {
+                    return false;
+                }
+            
+                event.clipboardData.setData('text/plain', selection.getText());
+
+                return true
+            }
+
+            onPaste(event) {
+                event.preventDefault()
+
+                const text = event.clipboardData.getData("Text");
+
+                this.selection.replace(
+                    document.createTextNode(text)
+                )
+            }
+        }
 
         class Mentions extends Extension {
             [EDITOR_HOOK.ON_MUTATION_CHANGE](event) {

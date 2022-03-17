@@ -306,10 +306,17 @@ export class DocumentObjectModel<T> {
     }
 
     isEmpty(): boolean {
-        return this.root.innerHTML === EMPTY
+        return (
+            this.root.innerHTML === EMPTY ||
+            this.root.childNodes.length === 0 ||
+            !this.root.textContent ||
+            this.root.textContent.trim().length === 0
+        )
     }
 
     clear() {
-        this.root.innerHTML = EMPTY
+        if (this.root.innerHTML !== EMPTY) {
+            this.root.innerHTML = EMPTY
+        }
     }
 }

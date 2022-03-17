@@ -115,6 +115,10 @@ export class Editor<T> {
     }
 
     onMutations(mutations: MutationRecord[]) {
+        if (this.content.dom.isEmpty()) {
+            this.content.dom.clear()
+        }
+
         for (const mutation of mutations) {
             this.onMutation(mutation)
         }

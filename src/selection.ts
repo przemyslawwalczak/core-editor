@@ -163,6 +163,20 @@ export class Selection<T> {
             return false
         }
 
+        if (this.editor.content.dom.isEmpty()) {
+            this.editor.container.replaceChild(
+                this.editor.content.dom.create({
+                    element: 'p',
+                    children: node as Text
+                }) as Node,
+                this.editor.container.childNodes[0],
+            )
+
+            this.setCursor(node)
+
+            return true
+        }
+
         if (!selection.hasRange()) {
             return false
         }
