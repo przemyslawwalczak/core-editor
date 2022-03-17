@@ -88,13 +88,114 @@
         <button id="serialize">Serialize</button>
     </div>
     <script>
-        const { Extension, Editor } = window.editor
+        const { Extension, EDITOR_HOOK, Editor } = window.editor
+
+        class Mentions extends Extension {
+            [EDITOR_HOOK.ON_MUTATION_CHANGE](event) {
+                const { target } = event;
+
+                if (target == null) {
+                    return false;
+                }
+
+                const attribute = this.editor.getVirtualAttributes(target);
+
+                if (
+                    attribute == null ||
+                    !attribute.guard ||
+                    !(target instanceof Text)
+                ) {
+                    return false;
+                }
+
+                const isRemoved = target.length === 0 || target.parentNode == null;
+
+                if (isRemoved) {
+                    // TODO: Call cleanup function of entity extensions.
+
+                    const pAttributes = this.editor.getVirtualEntity(attribute.parent);
+
+                    if (pAttributes && pAttributes.owner) {
+                        this.editor.vExtensions.splice(
+                            this.editor.vExtensions.indexOf(pAttributes.owner),
+                            1
+                        );
+                    }
+                }
+
+                // TODO: Additional mutation like changing text is required to add text node or switch to the selection of this node when
+                // mutation guard node.
+
+                switch (attribute.direction) {
+                    case "left": {
+                        if (isRemoved) {
+                            attribute.parent?.nextSibling?.remove();
+                            attribute.parent?.remove();
+                        }
+
+                        return false;
+                    }
+
+                    case "right": {
+                        if (isRemoved) {
+                            attribute.parent?.previousSibling?.remove();
+                            attribute.parent?.remove();
+                        }
+
+                        return false;
+                    }
+                }
+            }
+
+            render(dom) {
+                const mention = dom.create({
+                    element: "span",
+                    text: `@${this.data.name}`,
+                    attribute: {
+                        class: "mention",
+                        contenteditable: false,
+                        "data-entity-type": "mention",
+                        "data-type": this.data.type,
+                        "data-name": this.data.name,
+                        "data-id": this.data.id,
+                    },
+                });
+
+                return dom.create({
+                    children: [
+                        {
+                            text: "\uFEFF",
+                            attribute: {
+                                parent: mention,
+                                guard: true,
+                                direction: "left",
+                            },
+                        },
+                        mention,
+                        {
+                            text: "\uFEFF",
+                            attribute: {
+                                parent: mention,
+                                guard: true,
+                                direction: "right",
+                            },
+                        },
+                    ],
+                });
+            }
+
+            serialize() {
+                return `@${this.data.type}:${this.data.id}`;
+            }
+
+            static type = "mention";
+        }
 
         const container = document.getElementById('editor')
         const editor = new Editor({
             attach: container,
             extensions: [
-                // Mentions
+                Mentions
             ],
             value: [
                 "Hello World",
@@ -110,14 +211,14 @@
         })
 
         document.getElementById('replace-with-text').addEventListener('click', () => {
-            editor.replaceWithText('test')
+            editor.replaceWithText(document.getElementById('text').value)
         })
 
         document.getElementById('replace-with-entity').addEventListener('click', () => {
             editor.replaceWithEntity({
-                type: 'mention',
+                type: document.getElementById('entity_type').value,
                 data: {
-                    name: 'sftester'
+                    name: document.getElementById('entity_data_name').value
                 }
             })
         })

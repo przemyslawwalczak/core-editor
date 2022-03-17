@@ -3,6 +3,7 @@ import { Content } from './content'
 import { Extension } from './extension'
 import { EDITOR_HOOK } from './constants/hook'
 import { Entity, Serialized } from './dom'
+import { isRemoving } from './keyboard'
 
 export interface EditorOptions<T> {
     attach: Element | null
@@ -46,9 +47,21 @@ export class Editor<T> {
         const node = this.content.dom.createEntity(entity);
 
         if (Array.isArray(node)) {
-            return this.selection.replace(
-                document.createTextNode('replacing:with:array')
-            )
+            const marker = document.createTextNode('\uFEFF')
+
+            if (!this.selection.replace(marker) || !marker.parentNode) {
+                return false
+            }
+
+            for (const child of node) {
+                marker.parentNode.insertBefore(child, marker)
+            }
+
+            this.selection.setCursor(marker)
+
+            marker.remove()
+
+            return true
         }
 
         return this.selection.replace(node)
@@ -92,6 +105,71 @@ export class Editor<T> {
         }
 
         return false
+    }
+
+    
+    onMutation(mutation: MutationRecord) {
+        this.callExtensionEvent(EDITOR_HOOK.BEFORE_MUTATION_CHANGE, mutation)
+        this.callExtensionEvent(EDITOR_HOOK.ON_MUTATION_CHANGE, mutation)
+        this.callExtensionEvent(EDITOR_HOOK.AFTER_MUTATION_CHANGE, mutation)
+    }
+
+    onMutations(mutations: MutationRecord[]) {
+        for (const mutation of mutations) {
+            this.onMutation(mutation)
+        }
+    }
+
+    onKeyUp(event: KeyboardEvent) {
+        this.callExtensionEvent(EDITOR_HOOK.BEFORE_KEY_UP, event)
+
+        if (this.content.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
+            event.preventDefault()
+        }
+
+        this.callExtensionEvent(EDITOR_HOOK.ON_KEY_UP, event)
+        this.callExtensionEvent(EDITOR_HOOK.AFTER_KEY_UP, event)
+    }
+
+    onKeyDown(event: KeyboardEvent) {
+        this.callExtensionEvent(EDITOR_HOOK.BEFORE_KEY_DOWN, event)
+
+        if (this.content.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
+            event.preventDefault()
+        }
+
+        this.callExtensionEvent(EDITOR_HOOK.ON_KEY_DOWN, event)
+        this.callExtensionEvent(EDITOR_HOOK.AFTER_KEY_DOWN, event)
+    }
+
+    onCompositionEnd(event: CompositionEvent) {
+        if (event.data.lastIndexOf("\n") === event.data.length - 1 && event.target) {
+			this.selection.toNextLine();
+		}
+    }
+
+    onPaste(event: Event) {
+        event.preventDefault()
+
+        this.callExtensionEvent(EDITOR_HOOK.BEFORE_PASTE, event)
+        this.callExtensionEvent(EDITOR_HOOK.ON_PASTE, event)
+        this.callExtensionEvent(EDITOR_HOOK.AFTER_PASTE, event)
+    }
+
+    onCut(event: Event) {
+        event.preventDefault()
+
+        this.callExtensionEvent(EDITOR_HOOK.BEFORE_CUT, event)
+        this.callExtensionEvent(EDITOR_HOOK.ON_CUT, event)
+        this.callExtensionEvent(EDITOR_HOOK.AFTER_CUT, event)
+    }
+
+    onCopy(event: Event) {
+        event.preventDefault()
+
+        this.callExtensionEvent(EDITOR_HOOK.BEFORE_COPY, event)
+        this.callExtensionEvent(EDITOR_HOOK.ON_COPY, event)
+        this.callExtensionEvent(EDITOR_HOOK.AFTER_COPY, event)
     }
 
     clear() {

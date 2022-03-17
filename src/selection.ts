@@ -1,4 +1,5 @@
-import { Editor, EDITOR_HOOK } from './index'
+import { Editor } from './editor'
+import { EDITOR_HOOK } from './constants/hook'
 import { addEventListener, isChildrenOf } from './utils'
 
 type DocumentSelection = globalThis.Selection

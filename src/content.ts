@@ -1,6 +1,5 @@
-import { Editor, EDITOR_HOOK } from './index'
+import { Editor } from './index'
 import { addEventListener } from './utils'
-import { isRemoving } from './keyboard'
 import { DocumentObjectModel, Serialized } from './dom'
 
 export class Content<T> {
@@ -15,14 +14,14 @@ export class Content<T> {
 
         this.deserialize(value)
 
-        addEventListener(this.editor.container, 'keydown',   (event) => this.onKeyDown(event as KeyboardEvent))
-        addEventListener(this.editor.container, 'compositionend', (event) => this.onCompositionEnd(event as CompositionEvent))
-        addEventListener(this.editor.container, 'keyup',     (event) => this.onKeyUp(event as KeyboardEvent))
-        addEventListener(this.editor.container, 'paste',     (event) => this.onPaste(event))
-        addEventListener(this.editor.container, 'cut',       (event) => this.onCut(event))
-        addEventListener(this.editor.container, 'copy',      (event) => this.onCopy(event))
+        addEventListener(this.editor.container, 'keydown',   (event) => this.editor.onKeyDown(event as KeyboardEvent))
+        addEventListener(this.editor.container, 'compositionend', (event) => this.editor.onCompositionEnd(event as CompositionEvent))
+        addEventListener(this.editor.container, 'keyup',     (event) => this.editor.onKeyUp(event as KeyboardEvent))
+        addEventListener(this.editor.container, 'paste',     (event) => this.editor.onPaste(event))
+        addEventListener(this.editor.container, 'cut',       (event) => this.editor.onCut(event))
+        addEventListener(this.editor.container, 'copy',      (event) => this.editor.onCopy(event))
 
-        this.observer = new MutationObserver((mutations) => this.onMutations(mutations))
+        this.observer = new MutationObserver((mutations) => this.editor.onMutations(mutations))
 
         this.observer.observe(this.editor.container, {
             childList: true,
@@ -34,69 +33,6 @@ export class Content<T> {
         })
     }
 
-    onMutation(mutation: MutationRecord) {
-        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_MUTATION_CHANGE, mutation)
-        this.editor.callExtensionEvent(EDITOR_HOOK.ON_MUTATION_CHANGE, mutation)
-        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_MUTATION_CHANGE, mutation)
-    }
-
-    onMutations(mutations: MutationRecord[]) {
-        for (const mutation of mutations) {
-            this.onMutation(mutation)
-        }
-    }
-
-    onKeyUp(event: KeyboardEvent) {
-        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_KEY_UP, event)
-
-        if (this.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
-            event.preventDefault()
-        }
-
-        this.editor.callExtensionEvent(EDITOR_HOOK.ON_KEY_UP, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_KEY_UP, event)
-    }
-
-    onKeyDown(event: KeyboardEvent) {
-        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_KEY_DOWN, event)
-
-        if (this.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {
-            event.preventDefault()
-        }
-
-        this.editor.callExtensionEvent(EDITOR_HOOK.ON_KEY_DOWN, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_KEY_DOWN, event)
-    }
-
-    onCompositionEnd(event: CompositionEvent) {
-        if (event.data.lastIndexOf("\n") === event.data.length - 1 && event.target) {
-			this.editor.selection.toNextLine();
-		}
-    }
-
-    onPaste(event: Event) {
-        event.preventDefault()
-
-        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_PASTE, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.ON_PASTE, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_PASTE, event)
-    }
-
-    onCut(event: Event) {
-        event.preventDefault()
-
-        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_CUT, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.ON_CUT, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_CUT, event)
-    }
-
-    onCopy(event: Event) {
-        event.preventDefault()
-
-        this.editor.callExtensionEvent(EDITOR_HOOK.BEFORE_COPY, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.ON_COPY, event)
-        this.editor.callExtensionEvent(EDITOR_HOOK.AFTER_COPY, event)
-    }
 
     deserialize(value: Serialized<T>[]) {
         const { container } = this.editor
@@ -155,9 +91,8 @@ export class Content<T> {
 					continue;
 				}
 
+                // TODO: Warn about potentially unhandled node.
                 serialized.push(node.innerHTML)
-
-                // TODO: Warn about unhandled node.
 			}
 
 			result.push(serialized);
