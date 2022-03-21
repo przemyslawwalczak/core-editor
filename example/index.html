@@ -37,6 +37,8 @@
     <div id="editor"></div>
 
     <div>
+        <h3>Replacing with text</h3>
+
         <table>
             <tr>
                 <td>
@@ -58,6 +60,8 @@
         </table>
     </div>
     <div>
+        <h3>Entity type replaces</h3>
+
         <table>
             <tr>
                 <td>
@@ -85,9 +89,18 @@
         </table>
     </div>
     <div>
+        <h3>Text Intersection</h3>
+
+        <input id="search-regexp" value="@([a-zA-Z0-9]+)" />
+        <button id="search">Search By Regexp</button>
+    </div>
+    <div>
+        <h3>Misc/Editor methods</h3>
+        
         <button id="serialize">Serialize</button>
         <button id="get-selection-text">Get Selection Text</button>
     </div>
+
     <script>
         const { Extension, EDITOR_HOOK, Editor: BasicEditor } = window.editor
 
@@ -247,7 +260,16 @@
                     " World"
                 ],
                 "\r\n",
-                "Empty paragraph above ^"
+                "Empty paragraph above ^",
+                [
+                    "@sftester ",
+                    "p.d.walczak@gmail.com ",
+                    "@sftester ",
+                    "@sft",
+                    "bla",
+                    { type: 'mention', data: { name: 'sftester' } },
+                    "bla"
+                ]
             ]
         })
 
@@ -276,6 +298,13 @@
             }
 
             return console.log('has no selected text')
+        })
+
+        document.getElementById('search').addEventListener('click', () => {
+            const pattern = new RegExp(document.getElementById('search-regexp').value)
+            const result = editor.search(pattern)
+
+            console.log('result:', result)
         })
 
         console.log(editor)

@@ -1,15 +1,28 @@
-import { Selection } from './selection'
+import { CurrentSelection, Selection } from './selection'
 import { Content } from './content'
 import { Extension } from './extension'
 import { EDITOR_HOOK } from './constants/hook'
 import { Entity, Serialized } from './dom'
 import { isRemoving } from './keyboard'
+import { Search, SearchMatchBuffer } from './search'
 
 export interface EditorOptions<T> {
     attach: Element | null
     context?: T
     value?: Serialized<T>[]
     extensions?: typeof Extension[]
+}
+
+export interface SearchOptions {
+    selection?: CurrentSelection | null
+    // shallow?: boolean
+    // toCursor?: boolean
+}
+
+export interface SearchBuffer {
+    offset: number
+    length: number
+    string: string
 }
 
 export class Editor<T> {
@@ -65,6 +78,133 @@ export class Editor<T> {
         }
 
         return this.selection.replace(node)
+    }
+
+    search(value: RegExp, option?: SearchOptions): Search[] | null {
+        // TODO: If to cursor, offset ONLY to cursor index in this paragraph.
+
+        option = Object.assign(option || {}, {
+            selection:  option?.selection || this.getSelection(),
+            // shallow:    option?.shallow || true,
+            // toCursor:   option?.toCursor || true
+        })
+
+        if (option.selection == null || !option.selection.isCollapsed()) {
+            return null
+        }
+
+        const currentLine = this.selection.findSelectedLine(option.selection)
+
+        if (currentLine == null) {
+            return null
+        }
+
+        // const start = Date.now()
+
+        const result = [] as Search[]
+
+        const buffer: SearchBuffer = {
+            offset: 0,
+            length: 0,
+            string: ''
+        };
+
+        let current: SearchMatchBuffer | null = null
+
+        for (const node of currentLine.childNodes) {
+            if (!(node instanceof Text)) {
+                // TODO: And if not shallow search, we recursivelly search child nodes of this node too.
+
+                if (current) {                  
+                    result.push(
+                        new Search(current)
+                    ) 
+
+                    current = null
+                    buffer.offset = buffer.length
+                }
+
+                continue
+            }
+
+            if (!node.data.trim().length) {
+                continue
+            }
+
+            buffer.string += node.data
+            buffer.length += node.length
+
+            while (true) {
+                const slice = buffer.string.substring(buffer.offset)
+                const match = value.exec(slice)
+
+                if (match == null) {
+                    buffer.offset = buffer.length
+                    // NOTE: Breaking to fill the buffer with the next node.
+                    break
+                }
+
+                // NOTE: Position in the current slice
+                const position = match.index
+                // NOTE: Length of the current WHOLE match
+                const length = match[0].length
+                // NOTE: Offset is the position in the current slice + match length
+                const offset = position + length
+
+                if (current == null) {
+                    const intersected = []
+                    const mapped = new WeakMap()
+
+                    mapped.set(node, intersected.length)
+
+                    intersected.push({
+                        node,
+                        offset: position,
+                        length: length
+                    })
+
+                    current = {
+                        match,
+                        position,
+                        length,
+                        intersected,
+                        mapped
+                    }
+                }
+
+                if (!current.mapped.has(node)) {
+                    current.mapped.set(node, current.intersected.length)
+                    current.intersected.push({
+                        node,
+                        offset: position - current.position,
+                        length: length - current.length
+                    })
+
+                    current.position = position
+                    current.length = length
+                }
+
+                if (offset === slice.length) {
+                    current.match = match
+                    // NOTE: We've reached end of the slice, but currently searching
+                    break
+                }
+                
+                // NOTE: We've successfuly found a match and has not reached end of the buffer.
+                // NOTE: Therefore we got a match in middle of the buffer.
+
+                result.push(
+                    new Search(current)
+                )
+
+                buffer.offset += offset
+                current = null
+            }
+        }
+
+        // console.log('Search in line took:', (Date.now() - start), 'ms')
+
+        return result
     }
 
     getSelection() {
