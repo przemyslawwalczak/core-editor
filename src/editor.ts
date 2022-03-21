@@ -202,6 +202,14 @@ export class Editor<T> {
             }
         }
 
+        if (current) {                  
+            result.push(
+                new Search(current)
+            ) 
+
+            current = null
+        }
+
         // console.log('Search in line took:', (Date.now() - start), 'ms')
 
         return result
