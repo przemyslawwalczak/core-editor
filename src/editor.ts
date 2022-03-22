@@ -1,4 +1,4 @@
-import { CurrentSelection, Selection } from './selection'
+import { SelectionCollection, Selection } from './selection'
 import { Content } from './content'
 import { Extension } from './extension'
 import { EDITOR_HOOK } from './constants/hook'
@@ -14,7 +14,7 @@ export interface EditorOptions<T> {
 }
 
 export interface SearchOptions {
-    selection?: CurrentSelection | null
+    selection?: SelectionCollection | null
     // shallow?: boolean
     // toCursor?: boolean
 }
@@ -99,8 +99,6 @@ export class Editor<T> {
             return null
         }
 
-        // const start = Date.now()
-
         const result = [] as Search[]
 
         const buffer: SearchBuffer = {
@@ -111,7 +109,7 @@ export class Editor<T> {
 
         let current: SearchMatchBuffer | null = null
 
-        for (const node of currentLine.childNodes) {
+        for (const node of currentLine.node.childNodes) {
             if (!(node instanceof Text)) {
                 // TODO: And if not shallow search, we recursivelly search child nodes of this node too.
 
@@ -209,8 +207,6 @@ export class Editor<T> {
 
             current = null
         }
-
-        // console.log('Search in line took:', (Date.now() - start), 'ms')
 
         return result
     }

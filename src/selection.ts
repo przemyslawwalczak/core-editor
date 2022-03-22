@@ -9,22 +9,316 @@ export enum DIRECTION {
     RIGHT,
 }
 
-export class CurrentSelection {
-    private _selection: DocumentSelection
-    anchor: Node | null
-    focus: Node | null
+export interface SelectionLine {
     index: number
+    node: Node
+    container: Node
+}
+
+export interface SelectionLengthOffset {
+    offset: number
     length: number
+}
+
+export type SelectionLineLengthOffset = SelectionLine & SelectionLengthOffset
+
+export interface SearchContext {
+    node: Node
+    hasBeginning: boolean
+    breakpoint: Node | null
+}
+
+export function findByContainedNode(node: Node, collection: SelectionLine[]): SelectionLine | null {
+    for (const bucket of collection) {
+        if (bucket.node === node) {
+            return bucket
+        }
+    }
+
+    return null
+}
+
+export interface NodeOffset {
+    offset: number
+}
+
+export function findNodeOffset(target: Node, container: Node, result: NodeOffset = { offset: 0 }): number {
+    if (!container.contains(target)) {
+        return -1
+    }
+
+    if (container === target) {
+        return result.offset
+    }
+
+    for (const node of container.childNodes) {
+        if ()
+
+        if (node === target) {
+            return result.offset
+        }
+
+
+    }
+
+    return result.offset
+}
+
+export interface SelectableText {
+    offset: number
+    node: Text
+}
+
+export function getSelectableText() {
+
+}
+
+export class SelectionCollection {
+    private _selection: DocumentSelection
+
+    // collection: SelectionLineLengthOffset[]
+    container: Element
+    normalized: SelectableText[]
+
+    collapsed: boolean
+    multiline: boolean
 
     constructor(container: Element, selection: DocumentSelection) {
         this._selection = selection
 
-        this.anchor = selection.anchorNode || null
-        this.focus = selection.focusNode || null
+        // this.collection = []
+        this.container = container
+        this.normalized = []
 
-        // TODO: Get index and length of the container.
-        this.index = selection.anchorOffset || 0
-        this.length = selection.anchorOffset || 0
+        // TODO: Get front and back anchor node (which one is closer to start), flip if necessary.
+
+        
+
+        // const anchor = selection.anchorNode
+        // const focus = selection.focusNode
+
+        this.multiline = false
+        this.collapsed = selection.isCollapsed
+
+
+
+        // let front = null as Node | null
+        // let back = null as Node | null
+
+        // for (const index in this.container.childNodes) {
+        //     const container = this.container.childNodes[index]
+            
+        //     // const containsAnchorNode = container.contains(selection.anchorNode)
+        //     // const containsFocusNode = container.contains(selection.focusNode)
+                
+        //     // if (front == null && (containsAnchorNode || containsFocusNode)) {
+        //     //     front = container
+        //     // }
+
+        //     // if (back == null && (containsAnchorNode || containsFocusNode)) {
+        //     //     back = container
+        //     // }
+
+        //     if (front == null) {
+        //         continue
+        //     }
+
+
+        // }
+
+
+        // const anchor = this.findLineByNode(selection.anchorNode)
+        // const focus = this.findLineByNode(selection.focusNode)
+
+        // console.log('anchor node:', selection.anchorNode)
+        // console.log('focus node:', selection.focusNode)
+
+        // if (!anchor || !focus) {
+        //     throw new Error(`
+        //         SelectionCollection constructed out of boundary.
+        //         (Either anchor or focus node of selection is outside/unfound of container)
+        //     `)
+        // }
+
+        // this.multiline = !(anchor.node === focus.node)
+        // this.collapsed = selection.isCollapsed
+
+        // this.index = 0
+        // this.length = 0
+
+        // console.log('anchor.index:', anchor.index)
+        // console.log(' focus.index:', focus.index)
+
+        // const start = this.start = anchor.index <= focus.index ? anchor : focus
+        // const end = this.end = anchor.index <= focus.index ? focus : anchor
+
+        // const cache = [ start, end ]
+
+        // let hasBeginning = false
+
+        // for (const node of container.childNodes) {
+        //     if (node === start.container && !hasBeginning) {
+        //         hasBeginning = true
+        //     }
+
+        //     if (hasBeginning) {
+        //         const line = this.findLineByNode(node, cache)
+
+        //         if (line == null) {
+        //             continue
+        //         }
+
+        //         if (node === start.container && node === end.container) {
+        //             this.collection.push({
+        //                 offset: this.getOffsetInNode(line.container, start.node, end.node),
+        //                 length: this.getLengthInNode(line.container, start.node, end.node),
+        //                 index: line.index,
+        //                 node: line.node,
+        //                 container: line.container,
+        //             })
+
+        //             break
+        //         }
+
+        //         if (node === start.container) {
+        //             this.collection.push({
+        //                 offset: this.getOffsetInNode(line.container, start.node),
+        //                 length: this.getLengthInNode(line.container, start.node),
+        //                 index: line.index,
+        //                 node: line.node,
+        //                 container: line.container,
+        //             })
+
+        //             continue
+        //         }
+
+        //         if (node === end.container) {
+        //             this.collection.push({
+        //                 offset: this.getOffsetInNode(line.container, end.node),
+        //                 length: this.getLengthInNode(line.container, end.node),
+        //                 index: line.index,
+        //                 node: line.node,
+        //                 container: line.container,
+        //             })
+
+        //             break
+        //         }
+
+        //         this.collection.push({
+        //             offset: 0,
+        //             length: line.container.textContent?.length || 0,
+        //             index: line.index,
+        //             node: line.node,
+        //             container: line.container,
+        //         })
+        //     }
+        // }
+
+        // console.log('collection: multiline:', this.multiline, 'collapsed:', this.collapsed, 'collection:', this.collection)
+    }
+
+    private getOffsetRecursively(target: Node, context: SearchContext): number {
+        console.log('--target:', target)
+
+        if (target === context.node && !context.hasBeginning) {
+            context.hasBeginning = true
+
+            console.log('got the target node')
+
+            return this.getOffsetRecursively(target, context)
+        }
+
+        if (context.breakpoint && target === context.breakpoint) {
+            console.log('got the breakpoint')
+            return -1
+        }
+
+        let offset = 0
+
+        for (const node of target.childNodes) {
+            if (!(node instanceof Text)) {
+                const result = this.getOffsetRecursively(node, context)
+
+                if (result === -1) {
+                    return offset
+                }
+
+                offset += result
+                continue
+            }
+
+            console.log('-- node:', node)
+
+            if (!context.hasBeginning && node === context.node) {
+                context.hasBeginning = true
+            }
+
+            if (context.hasBeginning) {
+                offset += node.length
+            }
+        }
+
+        return offset
+    }
+
+    getOffsetInNode(container: Node, node: Node, breakpoint: Node | null = null): number {
+        const context: SearchContext = {
+            node,
+            hasBeginning: false,
+            breakpoint
+        }
+
+        console.log('getOffsetInNode Context:', context)
+
+        return this.getOffsetRecursively(container, context)
+    }
+
+    findLineByNode(node: Node | null, cache?: SelectionLine[]): SelectionLine | null {
+        if (node == null || !this.container.contains(node)) {
+            return null
+        }
+
+        if (cache) {
+            for (const entry of cache) {
+                if (entry.container === node) {
+                    return entry
+                }
+            }
+        }
+
+        let result = node
+
+        while (result && result.parentElement !== this.container) {
+            if (result.parentElement == null) {
+                return null
+            }
+
+            result = result.parentElement
+        }
+
+        // TODO: Since we got a line now, find where this node sits, literally.
+
+        return {
+            index: this.findNodeIndex(result),
+            node,
+            container: result,
+        }
+    }
+
+    findNodeIndex(node: Node, container: Node = this.container) {
+        return Array.prototype.indexOf.call(container.childNodes, node)
+    }
+
+    first(): SelectionLineLengthOffset | null {
+        return this.collection[0] || null
+    }
+
+    single(index: number = 0): SelectionLineLengthOffset | null {
+        return this.collection[index] || null
+    }
+
+    last(): SelectionLineLengthOffset | null {
+        return this.collection[this.collection.length - 1] || null
     }
 
     setRange(range: Range) {
@@ -74,20 +368,6 @@ export class CurrentSelection {
         return true
     }
 
-    anchorCreateTextNode(text: string, direction: DIRECTION = DIRECTION.RIGHT) {
-        const node = document.createTextNode(text)
-
-        switch (direction) {
-            case DIRECTION.LEFT: {
-                // this.anchor
-            }
-
-            case DIRECTION.RIGHT: {
-
-            }
-        }
-    }
-
     hasRange() {
         return this._selection.rangeCount > 0
     }
@@ -101,8 +381,12 @@ export class CurrentSelection {
         return selection ? selection.toString() : null
     }
 
+    isMultiline() {
+        return this.multiline
+    }
+
     isCollapsed() {
-        return this._selection.isCollapsed
+        return this.collapsed
     }
 }
 
@@ -120,7 +404,7 @@ export class Selection<T> {
         )
     }
 
-    getSelection(): CurrentSelection | null {
+    getSelection(): SelectionCollection | null {
         const selection = document.getSelection()
 
         if (selection == null) {
@@ -136,7 +420,7 @@ export class Selection<T> {
 
         // TODO: Return normalized selection
 
-        return new CurrentSelection(this.editor.container, selection)
+        return new SelectionCollection(this.editor.container, selection)
     }
 
     setCursor(node: Node) {
@@ -196,23 +480,11 @@ export class Selection<T> {
             return null
         }
 
-        const { anchor } = selection
-
-        if (anchor == null) {
+        if (selection.isMultiline()) {
             return null
         }
 
-        let result = anchor
-
-        while (result && result.parentElement !== this.editor.container) {
-            if (result.parentElement == null) {
-                return null
-            }
-
-            result = result.parentElement
-        }
-
-        return result
+        return selection.single()
     }
 
     findSelectedLineByElement(target: Element, selection = this.getSelection()) {
@@ -279,7 +551,7 @@ export class Selection<T> {
         return true
     }
 
-    isCurrentlySelected(selection: CurrentSelection | null = this.getSelection()): selection is CurrentSelection {
+    isCurrentlySelected(selection: SelectionCollection | null = this.getSelection()): selection is SelectionCollection {
         if (selection == null) {
             return false
         }

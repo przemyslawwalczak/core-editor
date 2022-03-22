@@ -12,14 +12,3 @@ export function isChildrenOf(container: Element, target: Element | Node | null) 
 
     return container.contains(target)
 }
-
-export function iterateTextNodes(parent: Node, callback: (node: Text) => void) {
-    for (const node of parent.childNodes) {
-        if (node instanceof Text) {
-            callback(node)
-            continue
-        }
-
-        iterateTextNodes(node, callback)
-    }
-}

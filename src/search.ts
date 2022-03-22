@@ -1,5 +1,3 @@
-import { iterateTextNodes } from "./utils"
-
 export interface Intersection {
     node: Text
     offset: number
@@ -23,11 +21,32 @@ export class Search {
         this.intersection = result.intersected
     }
 
-    first(): Intersection {
-        return this.intersection[0]
+    first(): Intersection | null {
+        return this.intersection[0] || null
     }
 
-    last(): Intersection {
-        return this.intersection[Math.min(0, this.intersection.length - 1)]
+    last(): Intersection | null {
+        return this.intersection[Math.min(0, this.intersection.length - 1)] || null
+    }
+
+    intersects(index: number): boolean {
+        const first = this.first()
+        const last = this.last()
+
+        if (first == null || last == null) {
+            return false
+        }
+
+        return (first.offset <= index && index <= last.offset + last.length)
+    }
+
+    contains(node: Node): boolean {
+        for (const intersection of this.intersection) {
+            if (node === intersection.node) {
+                return true
+            }
+        }
+
+        return false
     }
 }
