@@ -1,10 +1,11 @@
-import { SelectionCollection, Selection } from './selection'
+import { NormalizedSelection, Selection } from './selection'
 import { Content } from './content'
 import { Extension } from './extension'
 import { EDITOR_HOOK } from './constants/hook'
 import { Entity, Serialized } from './dom'
 import { isRemoving } from './keyboard'
 import { Search, SearchMatchBuffer } from './search'
+import { getChildrenIndex } from './utils'
 
 export interface EditorOptions<T> {
     attach: Element | null
@@ -14,7 +15,7 @@ export interface EditorOptions<T> {
 }
 
 export interface SearchOptions {
-    selection?: SelectionCollection | null
+    selection?: NormalizedSelection | null
     // shallow?: boolean
     // toCursor?: boolean
 }
@@ -93,126 +94,167 @@ export class Editor<T> {
             return null
         }
 
-        const currentLine = this.selection.findSelectedLine(option.selection)
+        // const currentLine = this.selection.findSelectedLine(option.selection)
 
-        if (currentLine == null) {
-            return null
-        }
+        // if (currentLine == null) {
+        //     return null
+        // }
 
-        const result = [] as Search[]
+        // const result = [] as Search[]
 
-        const buffer: SearchBuffer = {
-            offset: 0,
-            length: 0,
-            string: ''
-        };
+        // const buffer: SearchBuffer = {
+        //     offset: 0,
+        //     length: 0,
+        //     string: ''
+        // };
 
-        let current: SearchMatchBuffer | null = null
+        // let current: SearchMatchBuffer | null = null
 
-        for (const node of currentLine.node.childNodes) {
-            if (!(node instanceof Text)) {
-                // TODO: And if not shallow search, we recursivelly search child nodes of this node too.
+        // for (const node of currentLine.node.childNodes) {
+        //     if (!(node instanceof Text)) {
+        //         // TODO: And if not shallow search, we recursivelly search child nodes of this node too.
 
-                if (current) {                  
-                    result.push(
-                        new Search(current)
-                    ) 
+        //         if (current) {                  
+        //             result.push(
+        //                 new Search(current)
+        //             ) 
 
-                    current = null
-                    buffer.offset = buffer.length
-                }
+        //             current = null
+        //             buffer.offset = buffer.length
+        //         }
 
-                continue
-            }
+        //         continue
+        //     }
 
-            if (!node.data.trim().length) {
-                continue
-            }
+        //     if (!node.data.trim().length) {
+        //         continue
+        //     }
 
-            buffer.string += node.data
-            buffer.length += node.length
+        //     buffer.string += node.data
+        //     buffer.length += node.length
 
-            while (true) {
-                const slice = buffer.string.substring(buffer.offset)
-                const match = value.exec(slice)
+        //     while (true) {
+        //         const slice = buffer.string.substring(buffer.offset)
+        //         const match = value.exec(slice)
 
-                if (match == null) {
-                    buffer.offset = buffer.length
-                    // NOTE: Breaking to fill the buffer with the next node.
-                    break
-                }
+        //         if (match == null) {
+        //             buffer.offset = buffer.length
+        //             // NOTE: Breaking to fill the buffer with the next node.
+        //             break
+        //         }
 
-                // NOTE: Position in the current slice
-                const position = match.index
-                // NOTE: Length of the current WHOLE match
-                const length = match[0].length
-                // NOTE: Offset is the position in the current slice + match length
-                const offset = position + length
+        //         // NOTE: Position in the current slice
+        //         const position = match.index
+        //         // NOTE: Length of the current WHOLE match
+        //         const length = match[0].length
+        //         // NOTE: Offset is the position in the current slice + match length
+        //         const offset = position + length
 
-                if (current == null) {
-                    const intersected = []
-                    const mapped = new WeakMap()
+        //         if (current == null) {
+        //             const intersected = []
+        //             const mapped = new WeakMap()
 
-                    mapped.set(node, intersected.length)
+        //             mapped.set(node, intersected.length)
 
-                    intersected.push({
-                        node,
-                        offset: position,
-                        length: length
-                    })
+        //             intersected.push({
+        //                 node,
+        //                 offset: position,
+        //                 length: length
+        //             })
 
-                    current = {
-                        match,
-                        position,
-                        length,
-                        intersected,
-                        mapped
-                    }
-                }
+        //             current = {
+        //                 match,
+        //                 position,
+        //                 length,
+        //                 intersected,
+        //                 mapped
+        //             }
+        //         }
 
-                if (!current.mapped.has(node)) {
-                    current.mapped.set(node, current.intersected.length)
-                    current.intersected.push({
-                        node,
-                        offset: position - current.position,
-                        length: length - current.length
-                    })
+        //         if (!current.mapped.has(node)) {
+        //             current.mapped.set(node, current.intersected.length)
+        //             current.intersected.push({
+        //                 node,
+        //                 offset: position - current.position,
+        //                 length: length - current.length
+        //             })
 
-                    current.position = position
-                    current.length = length
-                }
+        //             current.position = position
+        //             current.length = length
+        //         }
 
-                if (offset === slice.length) {
-                    current.match = match
-                    // NOTE: We've reached end of the slice, but currently searching
-                    break
-                }
+        //         if (offset === slice.length) {
+        //             current.match = match
+        //             // NOTE: We've reached end of the slice, but currently searching
+        //             break
+        //         }
                 
-                // NOTE: We've successfuly found a match and has not reached end of the buffer.
-                // NOTE: Therefore we got a match in middle of the buffer.
+        //         // NOTE: We've successfuly found a match and has not reached end of the buffer.
+        //         // NOTE: Therefore we got a match in middle of the buffer.
 
-                result.push(
-                    new Search(current)
-                )
+        //         result.push(
+        //             new Search(current)
+        //         )
 
-                buffer.offset += offset
-                current = null
-            }
-        }
+        //         buffer.offset += offset
+        //         current = null
+        //     }
+        // }
 
-        if (current) {                  
-            result.push(
-                new Search(current)
-            ) 
+        // if (current) {                  
+        //     result.push(
+        //         new Search(current)
+        //     ) 
 
-            current = null
-        }
+        //     current = null
+        // }
 
-        return result
+        // return result
+
+        return null
     }
 
     getSelection() {
         return this.selection.getSelection()
+    }
+
+    lineByElement(target: Element, selection: NormalizedSelection | null = this.getSelection()) {
+
+    }
+    
+    selectionToNextLine(target?: Element) {
+        const selection = this.getSelection()
+
+        if (selection == null || !selection.isCollapsed()) {
+            return false
+        }
+
+        // const currentLine = target ? this.lineByElement(target, selection) : this.selectionLine(selection)
+
+        // if (currentLine == null) {
+        //     return false
+        // }
+
+        // const currentLineIndex = getChildrenIndex(currentLine as Element, this.container)
+
+        // if (currentLineIndex === -1) {
+        //     return false
+        // }
+
+        // const nextLine = this.container.children[currentLineIndex + 1]
+
+        // if (nextLine == null) {
+        //     return false
+        // }
+
+        // const range = document.createRange()
+
+        // range.setStart(nextLine, 0)
+        // range.setEnd(nextLine, 0)
+
+        // selection.setRange(range)
+
+        return true
     }
     
     onSelectionChange(event: Event) {
@@ -301,8 +343,8 @@ export class Editor<T> {
     }
 
     onCompositionEnd(event: CompositionEvent) {
-        if (event.data.lastIndexOf("\n") === event.data.length - 1 && event.target) {
-			this.selection.toNextLine();
+        if (event.data.lastIndexOf("\n") === event.data.length - 1) {
+			this.selectionToNextLine();
 		}
     }
 

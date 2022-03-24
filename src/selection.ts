@@ -9,76 +9,106 @@ export enum DIRECTION {
     RIGHT,
 }
 
-export interface SelectionLine {
-    index: number
-    node: Node
-    container: Node
-}
-
-export interface SelectionLengthOffset {
-    offset: number
-    length: number
-}
-
-export type SelectionLineLengthOffset = SelectionLine & SelectionLengthOffset
-
-export interface SearchContext {
-    node: Node
-    hasBeginning: boolean
-    breakpoint: Node | null
-}
-
-export function findByContainedNode(node: Node, collection: SelectionLine[]): SelectionLine | null {
-    for (const bucket of collection) {
-        if (bucket.node === node) {
-            return bucket
-        }
-    }
-
-    return null
-}
-
-export interface NodeOffset {
-    offset: number
-}
-
-export function findNodeOffset(target: Node, container: Node, result: NodeOffset = { offset: 0 }): number {
-    if (!container.contains(target)) {
-        return -1
-    }
-
-    if (container === target) {
-        return result.offset
-    }
-
-    for (const node of container.childNodes) {
-        if ()
-
-        if (node === target) {
-            return result.offset
-        }
-
-
-    }
-
-    return result.offset
-}
-
 export interface SelectableText {
     offset: number
-    node: Text
+    node: Text | Element | SelectableText[]
 }
 
-export function getSelectableText() {
-
+export interface SelectableTextLine {
+    index: number
+    container: Node
+    content: SelectableText[]
 }
 
-export class SelectionCollection {
+export interface SelectableContext {
+    offset: number
+    onSelectable: null | ((node: Text, offset: number) => void)
+}
+
+export function createSelectableContext() {
+    return {
+        offset: 0,
+        onSelectable: null
+    }
+}
+
+export function normalizeSelectableText(node: Node, context: SelectableContext): SelectableText {
+    const isElement = node instanceof Element
+
+    if (isElement && node.getAttribute('contenteditable') === 'false') {
+        return {
+            offset: context.offset,
+            node: getSelectableText(node),
+        }
+    }
+
+    if (isElement && node.outerHTML === '<br>') {
+        return {
+            offset: context.offset,
+            node
+        }
+    }
+
+    if (isElement) {
+        return {
+            offset: context.offset,
+            node: getSelectableText(node, context),
+        }
+    }
+
+    const isText = node instanceof Text
+
+    if (!isText) {
+        throw new Error(`Unhandled SelectableText: ${node}`)
+    }
+
+    const result = {
+        offset: context.offset++,
+        node
+    }
+    
+    if (context.onSelectable) {
+        context.onSelectable(result.node, result.offset)
+    }
+
+    return result
+}
+
+export function getSelectableText(container: Node, context: SelectableContext = createSelectableContext()): SelectableText[] {
+    const result = [] as SelectableText[]
+
+    for (const node of container.childNodes) {
+        result.push(
+            normalizeSelectableText(node, context)
+        )
+    }
+
+    return result
+}
+
+export function containsOrEqual(target: Node, node: Node | null) {
+    if (node == null) {
+        return false
+    }
+
+    return (target === node || node.contains(target))
+}
+
+export interface TextSelection {
+    index: number
+    offset: number
+    length: number
+    node: Text | Element | SelectableText[]
+}
+
+export class NormalizedSelection {
     private _selection: DocumentSelection
 
-    // collection: SelectionLineLengthOffset[]
     container: Element
-    normalized: SelectableText[]
+    selectable: SelectableTextLine[]
+    selection: TextSelection[]
+
+    length: number
 
     collapsed: boolean
     multiline: boolean
@@ -86,239 +116,236 @@ export class SelectionCollection {
     constructor(container: Element, selection: DocumentSelection) {
         this._selection = selection
 
-        // this.collection = []
+        const { anchorNode, anchorOffset, focusNode, focusOffset } = selection
+
+        if (!container.contains(anchorNode) || !container.contains(focusNode)) {
+            throw new Error(`
+                NormalizedSelection constructed out of boundary.
+                (Either anchor or focus node of selection is outside of selection container)
+            `)
+        }
+
+        if (anchorNode == null || focusNode == null) {
+            throw new Error('Anchor or Focus Node is not found in container')
+        }
+
         this.container = container
-        this.normalized = []
+        this.selectable = []
+        this.selection = []
 
-        // TODO: Get front and back anchor node (which one is closer to start), flip if necessary.
+        this.length = 0
 
+        let hasBeginning = false
+        let hasAnchorNode = false
+        let hasFocusNode = false
+
+        let front = null as null | TextSelection
+        let back = null as null | TextSelection
+
+        const start = Date.now()
         
+        const onSelectable = (node: Text, offset: number) => {
+            if (front && back) {
+                return
+            }
 
-        // const anchor = selection.anchorNode
-        // const focus = selection.focusNode
+            if (anchorNode === focusNode) {
+                if (node === anchorNode) {
+                    const off = Math.min(focusOffset, anchorOffset)
+                    const len = Math.max(focusOffset, anchorOffset) - Math.min(focusOffset, anchorOffset)
 
-        this.multiline = false
-        this.collapsed = selection.isCollapsed
+                    this.length += len
 
+                    const selection = {
+                        index: offset,
+                        offset: off,
+                        length: len,
+                        node,
+                    }
 
+                    front = selection
+                    back = selection
 
-        // let front = null as Node | null
-        // let back = null as Node | null
-
-        // for (const index in this.container.childNodes) {
-        //     const container = this.container.childNodes[index]
-            
-        //     // const containsAnchorNode = container.contains(selection.anchorNode)
-        //     // const containsFocusNode = container.contains(selection.focusNode)
-                
-        //     // if (front == null && (containsAnchorNode || containsFocusNode)) {
-        //     //     front = container
-        //     // }
-
-        //     // if (back == null && (containsAnchorNode || containsFocusNode)) {
-        //     //     back = container
-        //     // }
-
-        //     if (front == null) {
-        //         continue
-        //     }
-
-
-        // }
-
-
-        // const anchor = this.findLineByNode(selection.anchorNode)
-        // const focus = this.findLineByNode(selection.focusNode)
-
-        // console.log('anchor node:', selection.anchorNode)
-        // console.log('focus node:', selection.focusNode)
-
-        // if (!anchor || !focus) {
-        //     throw new Error(`
-        //         SelectionCollection constructed out of boundary.
-        //         (Either anchor or focus node of selection is outside/unfound of container)
-        //     `)
-        // }
-
-        // this.multiline = !(anchor.node === focus.node)
-        // this.collapsed = selection.isCollapsed
-
-        // this.index = 0
-        // this.length = 0
-
-        // console.log('anchor.index:', anchor.index)
-        // console.log(' focus.index:', focus.index)
-
-        // const start = this.start = anchor.index <= focus.index ? anchor : focus
-        // const end = this.end = anchor.index <= focus.index ? focus : anchor
-
-        // const cache = [ start, end ]
-
-        // let hasBeginning = false
-
-        // for (const node of container.childNodes) {
-        //     if (node === start.container && !hasBeginning) {
-        //         hasBeginning = true
-        //     }
-
-        //     if (hasBeginning) {
-        //         const line = this.findLineByNode(node, cache)
-
-        //         if (line == null) {
-        //             continue
-        //         }
-
-        //         if (node === start.container && node === end.container) {
-        //             this.collection.push({
-        //                 offset: this.getOffsetInNode(line.container, start.node, end.node),
-        //                 length: this.getLengthInNode(line.container, start.node, end.node),
-        //                 index: line.index,
-        //                 node: line.node,
-        //                 container: line.container,
-        //             })
-
-        //             break
-        //         }
-
-        //         if (node === start.container) {
-        //             this.collection.push({
-        //                 offset: this.getOffsetInNode(line.container, start.node),
-        //                 length: this.getLengthInNode(line.container, start.node),
-        //                 index: line.index,
-        //                 node: line.node,
-        //                 container: line.container,
-        //             })
-
-        //             continue
-        //         }
-
-        //         if (node === end.container) {
-        //             this.collection.push({
-        //                 offset: this.getOffsetInNode(line.container, end.node),
-        //                 length: this.getLengthInNode(line.container, end.node),
-        //                 index: line.index,
-        //                 node: line.node,
-        //                 container: line.container,
-        //             })
-
-        //             break
-        //         }
-
-        //         this.collection.push({
-        //             offset: 0,
-        //             length: line.container.textContent?.length || 0,
-        //             index: line.index,
-        //             node: line.node,
-        //             container: line.container,
-        //         })
-        //     }
-        // }
-
-        // console.log('collection: multiline:', this.multiline, 'collapsed:', this.collapsed, 'collection:', this.collection)
-    }
-
-    private getOffsetRecursively(target: Node, context: SearchContext): number {
-        console.log('--target:', target)
-
-        if (target === context.node && !context.hasBeginning) {
-            context.hasBeginning = true
-
-            console.log('got the target node')
-
-            return this.getOffsetRecursively(target, context)
-        }
-
-        if (context.breakpoint && target === context.breakpoint) {
-            console.log('got the breakpoint')
-            return -1
-        }
-
-        let offset = 0
-
-        for (const node of target.childNodes) {
-            if (!(node instanceof Text)) {
-                const result = this.getOffsetRecursively(node, context)
-
-                if (result === -1) {
-                    return offset
+                    return this.selection.push(selection)
                 }
 
-                offset += result
+                return
+            }
+
+            if (!front && node === anchorNode) {
+                const length = node.length - anchorOffset
+
+                this.length += length
+
+                return this.selection.push(front = {
+                    index: offset,
+                    offset: anchorOffset,
+                    length,
+                    node
+                })
+            }
+
+            if (!front && node === focusNode) {
+                const length = node.length - focusOffset
+
+                this.length += length
+
+                return this.selection.push(front = {
+                    index: offset,
+                    offset: focusOffset,
+                    length,
+                    node
+                })
+            }
+
+            if (front == null) {
+                return
+            }
+
+            if (node !== anchorNode && node !== focusNode) {
+                const length = node.length
+
+                this.length += length
+
+                return this.selection.push({
+                    index: offset,
+                    offset: 0,
+                    length,
+                    node
+                })
+            }
+
+            if (!back && node === anchorNode) {
+                const length = anchorOffset
+
+                this.length += length
+
+                return this.selection.push(back = {
+                    index: offset,
+                    offset: 0,
+                    length,
+                    node
+                })
+            }
+
+            if (!back && node === focusNode) {
+                const length = focusOffset
+
+                this.length += length
+
+                return this.selection.push(back = {
+                    index: offset,
+                    offset: 0,
+                    length,
+                    node
+                })
+            }
+        }
+
+        for (const index in container.childNodes) {
+            const line = container.childNodes[index]
+
+            if (!hasBeginning && containsOrEqual(anchorNode, line)) {
+                hasBeginning = true
+                hasAnchorNode = true
+            }
+
+            if (!hasBeginning && containsOrEqual(focusNode, line)) {
+                hasBeginning = true
+                hasFocusNode = true
+            }
+
+            if (!hasBeginning) {
                 continue
             }
 
-            console.log('-- node:', node)
+            /**
+             * Begin normalization of line
+             * 
+             * TODO: Get front & back of TextSelection?
+             */
 
-            if (!context.hasBeginning && node === context.node) {
-                context.hasBeginning = true
+            const selectable = getSelectableText(line, {
+                offset: 0,
+                onSelectable
+            })
+
+            this.selectable.push({
+                index: Number(index),
+                container: line,
+                content: selectable
+            })
+
+            if (anchorNode === focusNode) {
+                break
             }
 
-            if (context.hasBeginning) {
-                offset += node.length
+            if (!hasAnchorNode && containsOrEqual(anchorNode, line)) {
+                break
             }
-        }
 
-        return offset
-    }
-
-    getOffsetInNode(container: Node, node: Node, breakpoint: Node | null = null): number {
-        const context: SearchContext = {
-            node,
-            hasBeginning: false,
-            breakpoint
-        }
-
-        console.log('getOffsetInNode Context:', context)
-
-        return this.getOffsetRecursively(container, context)
-    }
-
-    findLineByNode(node: Node | null, cache?: SelectionLine[]): SelectionLine | null {
-        if (node == null || !this.container.contains(node)) {
-            return null
-        }
-
-        if (cache) {
-            for (const entry of cache) {
-                if (entry.container === node) {
-                    return entry
-                }
+            if (!hasFocusNode && containsOrEqual(focusNode, line)) {
+                break
             }
         }
 
-        let result = node
+        console.log('normalized in:', Date.now() - start)
 
-        while (result && result.parentElement !== this.container) {
-            if (result.parentElement == null) {
-                return null
-            }
+        console.log('selectable:', this.selectable)
+        console.log('selection:', this.selection)
 
-            result = result.parentElement
-        }
+        console.log('length:', this.length)
 
-        // TODO: Since we got a line now, find where this node sits, literally.
-
-        return {
-            index: this.findNodeIndex(result),
-            node,
-            container: result,
-        }
+        this.collapsed = selection.isCollapsed
+        this.multiline = this.selectable.length > 1
     }
 
-    findNodeIndex(node: Node, container: Node = this.container) {
-        return Array.prototype.indexOf.call(container.childNodes, node)
+    // findLineByNode(node: Node | null, cache?: SelectionLine[]): SelectionLine | null {
+    //     if (node == null || !this.container.contains(node)) {
+    //         return null
+    //     }
+
+    //     if (cache) {
+    //         for (const entry of cache) {
+    //             if (entry.container === node) {
+    //                 return entry
+    //             }
+    //         }
+    //     }
+
+    //     let result = node
+
+    //     while (result && result.parentElement !== this.container) {
+    //         if (result.parentElement == null) {
+    //             return null
+    //         }
+
+    //         result = result.parentElement
+    //     }
+
+    //     // TODO: Since we got a line now, find where this node sits, literally.
+
+    //     return {
+    //         index: this.findNodeIndex(result),
+    //         node,
+    //         container: result,
+    //     }
+    // }
+
+    // findNodeIndex(node: Node, container: Node = this.container) {
+    //     return Array.prototype.indexOf.call(container.childNodes, node)
+    // }
+
+    first() {
+        return this.selection[0] || null
     }
 
-    first(): SelectionLineLengthOffset | null {
-        return this.collection[0] || null
+    single(index: number = 0) {
+        return this.selection[index] || null
     }
 
-    single(index: number = 0): SelectionLineLengthOffset | null {
-        return this.collection[index] || null
-    }
-
-    last(): SelectionLineLengthOffset | null {
-        return this.collection[this.collection.length - 1] || null
+    last() {
+        return this.selection[this.selection.length - 1] || null
     }
 
     setRange(range: Range) {
@@ -404,7 +431,7 @@ export class Selection<T> {
         )
     }
 
-    getSelection(): SelectionCollection | null {
+    getSelection(): NormalizedSelection | null {
         const selection = document.getSelection()
 
         if (selection == null) {
@@ -420,25 +447,84 @@ export class Selection<T> {
 
         // TODO: Return normalized selection
 
-        return new SelectionCollection(this.editor.container, selection)
+        return new NormalizedSelection(this.editor.container, selection)
     }
 
-    setCursor(node: Node) {
-        const selection = this.getSelection()
+    // findSelectedLine(selection = this.getSelection()) {
+    //     if (!this.isCurrentlySelected(selection)) {
+    //         return null
+    //     }
 
-        if (!this.isCurrentlySelected(selection)) {
-            return false
-        }
+    //     if (selection.isMultiline()) {
+    //         return null
+    //     }
 
-        const range = document.createRange()
+    //     return selection.single()
+    // }
 
-        range.setEndAfter(node)
-        range.setStartAfter(node)
+    // findSelectedLineByElement(target: Element, selection = this.getSelection()) {
+    //     if (!this.isCurrentlySelected(selection)) {
+    //         return null
+    //     }
 
-        selection.setRange(range)
+    //     let result = target
 
-        return true
-    }
+    //     while (result && result.parentElement !== this.editor.container) {
+    //         if (result.parentElement == null) {
+    //             return null
+    //         }
+
+    //         result = result.parentElement
+    //     }
+
+    //     return result
+    // }
+
+    // getChildrenIndex(target: Element) {
+    //     for (let index=0; index<this.editor.container.children.length; index++) {
+    //         const children = this.editor.container.children[index]
+    //         if (children === target) {
+    //             return index
+    //         }
+    //     }
+
+    //     return -1
+    // }
+
+    // toNextLine(target?: Element) {
+    //     const selection = this.getSelection()
+
+    //     if (selection == null) {
+    //         return false
+    //     }
+
+    //     const currentLine = target ? this.findSelectedLineByElement(target, selection) : this.findSelectedLine(selection)
+
+    //     if (currentLine == null) {
+    //         return false
+    //     }
+
+    //     const currentLineIndex = this.getChildrenIndex(currentLine as Element)
+
+    //     if (currentLineIndex === -1) {
+    //         return false
+    //     }
+
+    //     const nextLine = this.editor.container.children[currentLineIndex + 1]
+
+    //     if (nextLine == null) {
+    //         return false
+    //     }
+
+    //     const range = document.createRange()
+
+    //     range.setStart(nextLine, 0)
+    //     range.setEnd(nextLine, 0)
+
+    //     selection.setRange(range)
+
+    //     return true
+    // }
 
     replace(node: Node): boolean {
         const selection = this.getSelection()
@@ -474,84 +560,25 @@ export class Selection<T> {
 
         return true
     }
-
-    findSelectedLine(selection = this.getSelection()) {
-        if (!this.isCurrentlySelected(selection)) {
-            return null
-        }
-
-        if (selection.isMultiline()) {
-            return null
-        }
-
-        return selection.single()
-    }
-
-    findSelectedLineByElement(target: Element, selection = this.getSelection()) {
-        if (!this.isCurrentlySelected(selection)) {
-            return null
-        }
-
-        let result = target
-
-        while (result && result.parentElement !== this.editor.container) {
-            if (result.parentElement == null) {
-                return null
-            }
-
-            result = result.parentElement
-        }
-
-        return result
-    }
-
-    getChildrenIndex(target: Element) {
-        for (let index=0; index<this.editor.container.children.length; index++) {
-            const children = this.editor.container.children[index]
-            if (children === target) {
-                return index
-            }
-        }
-
-        return -1
-    }
-
-    toNextLine(target?: Element) {
+    
+    setCursor(node: Node) {
         const selection = this.getSelection()
 
-        if (selection == null) {
-            return false
-        }
-
-        const currentLine = target ? this.findSelectedLineByElement(target, selection) : this.findSelectedLine(selection)
-
-        if (currentLine == null) {
-            return false
-        }
-
-        const currentLineIndex = this.getChildrenIndex(currentLine as Element)
-
-        if (currentLineIndex === -1) {
-            return false
-        }
-
-        const nextLine = this.editor.container.children[currentLineIndex + 1]
-
-        if (nextLine == null) {
+        if (!this.isCurrentlySelected(selection)) {
             return false
         }
 
         const range = document.createRange()
 
-        range.setStart(nextLine, 0)
-        range.setEnd(nextLine, 0)
+        range.setEndAfter(node)
+        range.setStartAfter(node)
 
         selection.setRange(range)
 
         return true
     }
 
-    isCurrentlySelected(selection: SelectionCollection | null = this.getSelection()): selection is SelectionCollection {
+    isCurrentlySelected(selection: NormalizedSelection | null = this.getSelection()): selection is NormalizedSelection {
         if (selection == null) {
             return false
         }
