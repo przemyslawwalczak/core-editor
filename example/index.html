@@ -91,7 +91,7 @@
     <div>
         <h3>Text Intersection</h3>
 
-        <input id="search-regexp" value="@([a-zA-Z0-9]+)" />
+        <input id="search-regexp" value="(^|\s)@([a-zA-Z0-9]+)" />
         <button id="search">Search By Regexp</button>
     </div>
     <div>
@@ -302,7 +302,24 @@
 
         document.getElementById('search').addEventListener('click', () => {
             const pattern = new RegExp(document.getElementById('search-regexp').value)
-            const result = editor.search(pattern)
+            const selection = editor.getSelection()
+            const result = editor.search(pattern, {
+                selection,
+            })
+
+            console.log('selection:', selection)
+
+            if (!result || result.length === 0) {
+                return
+            }
+
+            console.log(selection)
+
+            for (const { intersection, match } of result) {
+
+            }
+
+            // TODO: Select the result that matched the range.
 
             console.log('result:', result)
         })

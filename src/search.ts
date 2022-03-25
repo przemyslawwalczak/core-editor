@@ -6,7 +6,6 @@ export interface Intersection {
 
 export interface SearchMatchBuffer {
     match: RegExpExecArray
-    position: number
     length: number
     intersected: Intersection[]
     mapped: WeakMap<Text, number>
