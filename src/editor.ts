@@ -6,7 +6,7 @@ import { EDITOR_HOOK } from './constants/hook'
 import { Entity, Serialized } from './dom'
 import { isRemoving } from './keyboard'
 import { Search, SearchMatchBuffer } from './search'
-import { getChildrenIndex } from './utils'
+import { getChildrenIndex, intersects } from './utils'
 
 export interface EditorOptions<T> {
     attach: Element | null
@@ -17,8 +17,7 @@ export interface EditorOptions<T> {
 
 export interface SearchOptions {
     selection?: NormalizedSelection | null
-    // shallow?: boolean
-    // toCursor?: boolean
+    intersection?: boolean
 }
 
 export interface SearchBuffer {
@@ -82,11 +81,12 @@ export class Editor<T> {
         return this.selection.replace(node)
     }
 
-    search(value: RegExp, option?: SearchOptions): Search[] | null {
+    search(value: RegExp, optional?: SearchOptions): Search[] | null {
         // TODO: If to cursor, offset ONLY to cursor index in this paragraph/selectable.
 
         const internal = Object.assign({}, {
-            selection:  option?.selection || this.getSelection(),
+            selection:  optional?.selection || this.getSelection(),
+            intersection: optional?.intersection || true
         })
 
         if (internal.selection == null || !internal.selection.isCollapsed()) {
@@ -105,12 +105,12 @@ export class Editor<T> {
 
         let current: SearchMatchBuffer | null = null
 
-        for (const { node, offset: selectableOffset } of currentLine.content) {
+        for (const { node, offset: index } of currentLine.content) {
             if (Array.isArray(node) || node instanceof Element) {
                 if (current) {                  
                     result.push(
                         new Search(current)
-                    ) 
+                    )
 
                     current = null
                     buffer.offset = buffer.length
@@ -126,6 +126,8 @@ export class Editor<T> {
             buffer.string += node.data
             buffer.length += node.length
 
+            const original = buffer.offset
+
             while (true) {
                 const slice = buffer.string.substring(buffer.offset)
                 const match = value.exec(slice)
@@ -136,12 +138,13 @@ export class Editor<T> {
                     break
                 }
 
+                const position = buffer.offset - original
+
                 // NOTE: Position in the current slice
-                const position = match.index
+                const offset = match.index
                 // NOTE: Length of the current WHOLE match
                 const length = match[0].length
                 // NOTE: Offset is the position in the current slice + match length
-                const offset = position + length
 
                 if (current == null) {
                     const intersected = []
@@ -150,9 +153,10 @@ export class Editor<T> {
                     mapped.set(node, intersected.length)
 
                     intersected.push({
+                        index,
+                        offset: position + offset,
+                        length,
                         node,
-                        offset: selectableOffset,
-                        length: length
                     })
 
                     current = {
@@ -165,17 +169,19 @@ export class Editor<T> {
 
                 if (!current.mapped.has(node)) {
                     current.mapped.set(node, current.intersected.length)
+
                     current.intersected.push({
+                        index,
+                        offset: position + offset,
+                        length: length - current.length,
                         node,
-                        offset: selectableOffset,
-                        length: length - current.length
                     })
 
                     current.length = length
+                    current.match = match
                 }
 
-                if (offset === slice.length) {
-                    current.match = match
+                if (offset + length === slice.length) {
                     // NOTE: We've reached end of the slice, but currently searching
                     break
                 }
@@ -187,7 +193,8 @@ export class Editor<T> {
                     new Search(current)
                 )
 
-                buffer.offset += offset
+                buffer.offset += offset + length
+
                 current = null
             }
         }
@@ -198,6 +205,10 @@ export class Editor<T> {
             ) 
 
             current = null
+        }
+
+        if (internal.intersection) {
+            return result.filter((search) => intersects(search, internal.selection as NormalizedSelection))
         }
 
         return result
@@ -301,6 +312,8 @@ export class Editor<T> {
     }
 
     onKeyUp(event: KeyboardEvent) {
+        // TODO: Selection change event on remove.
+
         this.callExtensionEvent(EDITOR_HOOK.BEFORE_KEY_UP, event)
 
         if (this.content.dom.isEmpty() && isRemoving(event) && !event.defaultPrevented) {

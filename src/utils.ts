@@ -1,3 +1,6 @@
+import { NormalizedSelection } from "./normalized-selection"
+import { Search } from "./search"
+
 export type Listener = (event: Event | KeyboardEvent | CompositionEvent) => void
 
 export function addEventListener(target: Element | Document | Window, event: string, listener: Listener) {
@@ -23,4 +26,16 @@ export function getChildrenIndex(target: Element, container: Element) {
     }
 
     return -1
+}
+
+export function intersects(search: Search, { front, selection }: NormalizedSelection) {
+    if (selection.length > 1 || front == null || !search.intersects(front.index, front.offset)) {
+        return false
+    }
+
+    return true
+}
+
+export function inRange(offset: number, length: number, value: number) {
+    return (value >= offset && value <= (offset + length))
 }

@@ -104,6 +104,13 @@
     <script>
         const { Extension, EDITOR_HOOK, Editor: BasicEditor } = window.editor
 
+        const data = [
+            { name: 'sftester' },
+            { name: 'hello' },
+            { name: 'test' },
+            { name: 'sftester123' },
+        ]
+
         class Editor extends BasicEditor {
             onCut(event) {
                 event.preventDefault();
@@ -141,6 +148,24 @@
                 this.selection.replace(
                     document.createTextNode(text)
                 )
+            }
+
+            onSelectionChange() {
+                const pattern = new RegExp(document.getElementById('search-regexp').value)
+                const selection = editor.getSelection()
+                const result = editor.search(pattern, {
+                    selection,
+                })
+
+                if (!result || result.length === 0) {
+                    return
+                }
+
+                const [current] = result
+
+                const { match } = current
+
+                console.log('SelectionChange Result:', match)
             }
         }
 
@@ -307,21 +332,15 @@
                 selection,
             })
 
-            console.log('selection:', selection)
-
             if (!result || result.length === 0) {
                 return
             }
-
-            console.log(selection)
 
             for (const { intersection, match } of result) {
 
             }
 
             // TODO: Select the result that matched the range.
-
-            console.log('result:', result)
         })
 
         console.log(editor)
