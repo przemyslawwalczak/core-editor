@@ -63,12 +63,18 @@ export class Editor<T> {
                 marker.parentNode.insertBefore(child, marker)
             }
 
+            this.selection.setCursor(marker)
+
             marker.remove()
 
             return true
         }
 
-        return this.selection.replace(node)
+        if (!this.selection.replace(node)) {
+            return false;
+        }
+
+        return this.selection.setCursor(node)
     }
 
     replaceWithText(content: string | string[]): boolean {

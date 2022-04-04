@@ -1,5 +1,5 @@
 {
-  "version": "1.0.14",
+  "version": "1.0.15",
   "name": "@netspacejs/editor",
   "umd:name": "editor",
   "repository": "przemyslawwalczak/core-editor",

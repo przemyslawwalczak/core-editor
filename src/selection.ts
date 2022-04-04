@@ -76,13 +76,9 @@ export class Selection<T> {
             node.replaceWith(warpper)
 
             warpper.appendChild(node)
-
-            this.setCursor(warpper)
             
             return true
         }
-
-        this.setCursor(node)
 
         return true
     }
