@@ -50,6 +50,7 @@ export class Selection<T> {
                     element: 'p',
                     children: node as Text
                 }) as Node,
+
                 this.editor.container.childNodes[0],
             )
 
@@ -67,7 +68,17 @@ export class Selection<T> {
         range.deleteContents()
         range.insertNode(node)
 
-        this.setCursor(node)
+        if (node.parentNode === this.editor.container && node instanceof Text) {
+            const warpper = this.editor.content.dom.create({
+                element: 'p'
+            }) as Node
+            
+            node.replaceWith(warpper)
+
+            warpper.appendChild(node)
+            
+            return true
+        }
 
         return true
     }

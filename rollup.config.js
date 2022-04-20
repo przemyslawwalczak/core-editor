@@ -10,7 +10,8 @@ export default {
 		file: pkg.module,
 		sourcemap: false,
 	}, {
-		format: 'cjs',
+		name: pkg['umd:name'] || pkg.name,
+		format: 'umd',
 		file: pkg.main,
 		sourcemap: false,
 		esModule: false,

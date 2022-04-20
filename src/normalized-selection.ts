@@ -77,8 +77,8 @@ export function getSelectableText(container: Node, context: SelectableContext = 
     return result
 }
 
-export function containsOrEqual(target: Node, node: Node | null) {
-    if (node == null) {
+export function containsOrEqual(target: Node | null, node: Node | null) {
+    if (target == null || node == null) {
         return false
     }
 
@@ -136,6 +136,10 @@ export class NormalizedSelection {
 
         for (const index in container.childNodes) {
             const line = container.childNodes[index]
+
+            if (!(line instanceof Element)) {
+                continue
+            }
 
             if (!hasBeginning && containsOrEqual(anchorNode, line)) {
                 hasBeginning = true

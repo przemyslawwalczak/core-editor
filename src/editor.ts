@@ -54,15 +54,7 @@ export class Editor<T> {
         // TODO: vEntities fro storing the virtual mappings for extensions to a node.
     }
 
-    replaceWithText(text: string): boolean {
-        return this.selection.replace(
-            document.createTextNode(text)
-        )
-    }
-
-    replaceWithEntity(entity: Entity): boolean {
-        const node = this.content.dom.createEntity(entity);
-
+    replace(node: Node | Node[]) {
         if (Array.isArray(node)) {
             const marker = document.createTextNode('\uFEFF')
 
@@ -81,7 +73,27 @@ export class Editor<T> {
             return true
         }
 
-        return this.selection.replace(node)
+        if (!this.selection.replace(node)) {
+            return false;
+        }
+
+        return this.selection.setCursor(node)
+    }
+
+    replaceWithText(content: string | string[]): boolean {
+        if (Array.isArray(content)) {
+            return this.replace(content.map(text => document.createTextNode(text)))
+        }
+
+        return this.replace(
+            document.createTextNode(content)
+        )
+    }
+
+    replaceWithEntity(entity: Entity): boolean {
+        return this.replace(
+            this.content.dom.createEntity(entity)
+        )
     }
 
     search(value: RegExp, optional?: SearchOptions): Search[] | null {
@@ -105,6 +117,10 @@ export class Editor<T> {
         };
 
         const currentLine = internal.selection.single()
+
+        if (currentLine == null) {
+            return null
+        }
 
         let current: SearchMatchBuffer | null = null
 
