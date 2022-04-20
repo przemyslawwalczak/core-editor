@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Core Editor</title>
-    <script src="/library.js"></script>
+    <script src="/library.min.js"></script>
     <style>
         body, html {
             margin: 0;
@@ -268,9 +268,9 @@
             serialize() {
                 return `@${this.data.type}:${this.data.id}`;
             }
-
-            static type = "mention";
         }
+
+        Mentions.type = "mention";
 
         const container = document.getElementById('editor')
         const editor = new Editor({
