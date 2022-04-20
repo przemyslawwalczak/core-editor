@@ -147,6 +147,8 @@
 
                 const text = event.clipboardData.getData("Text");
 
+                console.log('pasting:', text);
+
                 this.selection.replace(
                     document.createTextNode(text)
                 )

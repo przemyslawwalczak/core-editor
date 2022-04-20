@@ -44,6 +44,8 @@ export class Selection<T> {
             return false
         }
 
+        console.log('has selection:', selection);
+
         if (this.editor.content.dom.isEmpty()) {
             this.editor.container.replaceChild(
                 this.editor.content.dom.create({
@@ -63,6 +65,8 @@ export class Selection<T> {
             return false
         }
 
+        console.log('has range, replacing')
+
         const range = selection.getRange();
 
         range.deleteContents()
@@ -76,9 +80,13 @@ export class Selection<T> {
             node.replaceWith(warpper)
 
             warpper.appendChild(node)
+
+            this.setCursor(node)
             
             return true
         }
+
+        this.setCursor(node)
 
         return true
     }
@@ -94,6 +102,7 @@ export class Selection<T> {
 
         range.setEndAfter(node)
         range.setStartAfter(node)
+        range.collapse()
 
         selection.setRange(range)
 
