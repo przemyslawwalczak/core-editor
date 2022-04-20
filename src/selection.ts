@@ -44,8 +44,6 @@ export class Selection<T> {
             return false
         }
 
-        console.log('has selection:', selection);
-
         if (this.editor.content.dom.isEmpty()) {
             this.editor.container.replaceChild(
                 this.editor.content.dom.create({
@@ -64,8 +62,6 @@ export class Selection<T> {
         if (!selection.hasRange()) {
             return false
         }
-
-        console.log('has range, replacing')
 
         const range = selection.getRange();
 
