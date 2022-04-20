@@ -49,8 +49,11 @@ export class Editor<T> {
 
         this.content = new Content(this, option.value)
         this.selection = new Selection(this)
+
+        // TODO: Entities that are created from extensions.
+        // TODO: vEntities fro storing the virtual mappings for extensions to a node.
     }
-    
+
     replaceWithText(text: string): boolean {
         return this.selection.replace(
             document.createTextNode(text)
@@ -107,7 +110,7 @@ export class Editor<T> {
 
         for (const { node, offset: index } of currentLine.content) {
             if (Array.isArray(node) || node instanceof Element) {
-                if (current) {                  
+                if (current) {
                     result.push(
                         new Search(current)
                     )
@@ -118,7 +121,7 @@ export class Editor<T> {
 
                 continue
             }
-            
+
             if (!node.data.trim().length) {
                 continue
             }
@@ -185,7 +188,7 @@ export class Editor<T> {
                     // NOTE: We've reached end of the slice, but currently searching
                     break
                 }
-                
+
                 // NOTE: We've successfuly found a match and has not reached end of the buffer.
                 // NOTE: Therefore we got a match in middle of the buffer.
 
@@ -198,11 +201,11 @@ export class Editor<T> {
                 current = null
             }
         }
-        
-        if (current) {                  
+
+        if (current) {
             result.push(
                 new Search(current)
-            ) 
+            )
 
             current = null
         }
@@ -237,7 +240,7 @@ export class Editor<T> {
         if (nextLine == null) {
             return false
         }
-        
+
         const range = document.createRange()
 
         range.setStart(nextLine, 0)
@@ -247,7 +250,7 @@ export class Editor<T> {
 
         return true
     }
-    
+
     onSelectionChange(event: Event) {
         if (!this.selection.isCurrentlySelected()) {
             return
@@ -294,7 +297,7 @@ export class Editor<T> {
         return false
     }
 
-    
+
     onMutation(mutation: MutationRecord) {
         this.callExtensionEvent(EDITOR_HOOK.BEFORE_MUTATION_CHANGE, mutation)
         this.callExtensionEvent(EDITOR_HOOK.ON_MUTATION_CHANGE, mutation)

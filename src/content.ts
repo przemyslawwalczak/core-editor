@@ -57,7 +57,7 @@ export class Content<T> {
         const result = [];
 
 		// eslint-disable-next-line no-restricted-syntax
-		for (const paragraph of container.children) {
+		for (const paragraph of Array.from(container.children)) {
 			if (paragraph.innerHTML === "<br>") {
 				result.push("\n");
 				// eslint-disable-next-line no-continue
@@ -67,7 +67,7 @@ export class Content<T> {
 			const serialized = [];
 
 			// eslint-disable-next-line no-restricted-syntax
-			for (const node of paragraph.childNodes) {
+			for (const node of Array.from(paragraph.childNodes)) {
                 if (!(node instanceof Text) && !(node instanceof Element)) {
                     continue
                 }

@@ -193,7 +193,7 @@ export class DocumentObjectModel<T> {
     format(target: Element, serialized: Serialized<T>[]): boolean {
         if (serialized.length === 0) {
             this.root.innerHTML = EMPTY
-            
+
             return true
         }
 

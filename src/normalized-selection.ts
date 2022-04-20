@@ -57,7 +57,7 @@ export function normalizeSelectableText(node: Node, context: SelectableContext):
         offset: context.offset++,
         node
     }
-    
+
     if (context.onSelectable) {
         context.onSelectable(node, result.offset)
     }
@@ -68,7 +68,7 @@ export function normalizeSelectableText(node: Node, context: SelectableContext):
 export function getSelectableText(container: Node, context: SelectableContext = createSelectableContext()): SelectableText[] {
     const result = [] as SelectableText[]
 
-    for (const node of container.childNodes) {
+    for (const node of Array.from(container.childNodes)) {
         result.push(
             normalizeSelectableText(node, context)
         )
@@ -189,31 +189,31 @@ export class NormalizedSelection {
         }
 
         const { anchorNode, anchorOffset, focusNode, focusOffset } = this._selection
-    
+
         if (anchorNode === focusNode) {
             if (node === anchorNode) {
                 const offset = Math.min(focusOffset, anchorOffset)
                 const length = Math.max(focusOffset, anchorOffset) - offset
-    
+
                 const selection = {
                     index,
                     offset,
                     length,
                     node,
                 }
-    
+
                 this.front = selection
                 this.back = selection
-    
+
                 return this.selection.push(selection)
             }
-    
+
             return
         }
-    
+
         if (!this.front && node === anchorNode) {
             const length = node.length - anchorOffset
-    
+
             return this.selection.push(this.front = {
                 index,
                 offset: anchorOffset,
@@ -221,10 +221,10 @@ export class NormalizedSelection {
                 node
             })
         }
-    
+
         if (!this.front && node === focusNode) {
             const length = node.length - focusOffset
-    
+
             return this.selection.push(this.front = {
                 index,
                 offset: focusOffset,
@@ -232,14 +232,14 @@ export class NormalizedSelection {
                 node
             })
         }
-    
+
         if (this.front == null) {
             return
         }
-    
+
         if (node !== anchorNode && node !== focusNode) {
             const length = node.length
-    
+
             return this.selection.push({
                 index,
                 offset: 0,
@@ -247,10 +247,10 @@ export class NormalizedSelection {
                 node
             })
         }
-    
+
         if (!this.back && node === anchorNode) {
             const length = anchorOffset
-    
+
             return this.selection.push(this.back = {
                 index,
                 offset: 0,
@@ -258,10 +258,10 @@ export class NormalizedSelection {
                 node
             })
         }
-    
+
         if (!this.back && node === focusNode) {
             const length = focusOffset
-    
+
             return this.selection.push(this.back = {
                 index,
                 offset: 0,

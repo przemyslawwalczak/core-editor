@@ -10,8 +10,9 @@
     ]
   },
   "compilerOptions": {
-    "target": "esnext",
     "module": "esnext",
+    "lib": ["es2017", "dom"],
+    "target": "es6",
     "declaration": true,
     "declarationDir": "types",
     "forceConsistentCasingInFileNames": true,
